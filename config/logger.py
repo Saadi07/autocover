@@ -2,7 +2,7 @@ import logging
 import colorlog
 
 # Create a logger
-logger = logging.getLogger("PDF4ANKI_LOGGER")
+logger = logging.getLogger("AUTOCOVER_LOGGER")
 logger.setLevel(logging.INFO)
 # Create a handler for file output
 # file_handler = logging.FileHandler('logs/app.log')

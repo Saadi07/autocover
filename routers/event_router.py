@@ -5,7 +5,7 @@ from services.event_service import map_chargebee_event_to_bubble_data
 from utils.utils import send_to_bubble
 
 event_router = APIRouter(
-    prefix="/api/decks",
+    prefix="/api/event",
     tags=["file"],
     responses={404: {"description": "Not found"}},
 )
