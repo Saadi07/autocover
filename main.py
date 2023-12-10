@@ -34,7 +34,7 @@ async def chargebee_webhook(
     event: ChargebeeEvent = Body(...),
    # signature: str = Header(...),
 ):
-    print("here" ,event)
+    #print("here" ,event)
     # Verify the webhook signature for security
     # if not verify_chargebee_signature(event.json(), signature):
     #     raise HTTPException(status_code=400, detail="Invalid Chargebee webhook signature")
