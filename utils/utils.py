@@ -14,5 +14,6 @@ def verify_chargebee_signature(payload, signature):
 
 # Function to send data to Bubble.io
 def send_to_bubble(data):
+    print("data", data)
     response = requests.post(BUBBLE_API_URL, headers=BUBBLE_HEADERS, json=data)
     response.raise_for_status()

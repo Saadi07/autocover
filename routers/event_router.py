@@ -12,8 +12,9 @@ event_router = APIRouter(
 
 
 @event_router.post("/chargebee-webhook")
-async def chargebee_webhook(event: ChargebeeEvent = Body(...)):
+def chargebee_webhook(event: ChargebeeEvent = Body(...)):
     try:
+        #print("here", event)
         bubble_data = map_chargebee_event_to_bubble_data(event)
         send_to_bubble(bubble_data)
         return {"status": "success"}
