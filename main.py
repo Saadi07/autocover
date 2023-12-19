@@ -20,6 +20,6 @@ app.include_router(event_router)
 def health_check():
     return {"message": "Server is up and running"}
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
  
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
