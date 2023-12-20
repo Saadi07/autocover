@@ -14,9 +14,10 @@ event_router = APIRouter(
 @event_router.post("/chargebee-webhook")
 def chargebee_webhook(event: ChargebeeEvent = Body(...)):
     try:
-        print(event)
+       # print(event)
         bubble_data = map_chargebee_event_to_bubble_data(event)
-        send_to_bubble(bubble_data)
+        if bubble_data:
+            send_to_bubble(bubble_data)
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Error occcured while processing chargebee event : {e}")

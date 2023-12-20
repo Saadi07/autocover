@@ -9,15 +9,15 @@ def map_chargebee_event_to_bubble_data(chargebee_event):
 def map_chargebee_event_to_bubble_data(chargebee_event):
     chargebee_event = dict(chargebee_event)
     if chargebee_event:
-        if chargebee_event['event_type'] == 'invoice_generated':
-            billing_address = chargebee_event['content']['invoice']['billing_address']
+        if chargebee_event['event_type'] == 'payment_succeeded':
+            billing_address = chargebee_event['content']['customer']['billing_address']
             customer = chargebee_event['content']['customer']
 
             # Full name
             full_name = f"{customer['first_name']} {customer['last_name']}"
 
             # Check for D&N
-            has_dn = True  # Assuming D&N is always present in this context
+            has_dn = 'Yes'  # Assuming D&N is always present in this context
 
             # Address lines
             line1 = billing_address.get('line1', '')
@@ -26,7 +26,7 @@ def map_chargebee_event_to_bubble_data(chargebee_event):
             # City + Country
             city_country = f"{billing_address.get('city', '')}, {billing_address.get('country', '')}"
 
-            # Postal Code
+            # Postal Code (if available)
             postal_code = billing_address.get('postal_code', '')
 
             # Phone Number and Email
@@ -42,18 +42,19 @@ def map_chargebee_event_to_bubble_data(chargebee_event):
             merchant_groups = ["group_id1", "group_id2"]
 
             result = {
-                "Full name": full_name,
-                "Have D&N?": has_dn,
-                "Line 1": line1,
-                "Line 2": line2,
-                "Line 3": city_country,
-                "Line 4": postal_code,
-                "Phone Number": phone_number,
+                "Full Name": full_name,
+                # "Have D&N been done?": has_dn,
+                # "Line 1: Address": line1,
+                # "Line 2: Address": line2,
+                # "Line 3: Address": city_country,
+                # "Line 4: Address": postal_code if postal_code else '',
+                # "Phone Number 2": phone_number,
                 #"Email": email,
-                "Associated Vehicle": associated_vehicle,
-                "List of insurance products": insurance_products,
-                "List of merchants": merchants,
-                "List of merchants group": merchant_groups
+                # "Associated Vehicle": associated_vehicle,
+                # "List of insurance products": insurance_products,
+                # "List of merchants": merchants,
+                # "List of merchants group": merchant_groups
             }
 
             return result
+
