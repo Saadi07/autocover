@@ -1,44 +1,93 @@
+from utils.utils import send_to_bubble, get_vehicle_info, get_from_bubble, find_matching_record, calculate_tax, save_or_send_html, update_bubble, get_merchant_from_bubble
+from config.logger import logger
+from jinja2 import Environment, FileSystemLoader
 
-# def map_chargebee_event_to_bubble_data(chargebee_event):
-#     chargebee_event = dict(chargebee_event)
-#     if(chargebee_event):
-#         if(chargebee_event['event_type'] == 'invoice_generated'):
-#             return {"first_name": chargebee_event['content']['invoice']['billing_address']['first_name'], "last_name": chargebee_event['content']['invoice']['billing_address']['last_name']}
-            
+TEMPLATE_FILE_PATH = "/home/saadi09/Documents/InsightHub Projects/AUTOCOVER/templates"
+
+template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
+template = template_env.get_template("test.html")
+
+
+def find_matching_product(all_records_dict, rate_id_to_match, mileage_to_match):
+    print(rate_id_to_match)
+    product = find_matching_record(all_records_dict, rate_id_to_match, mileage_to_match)
+
+    if not product:
+        logger.warning("No matching record found.")
+
+    return product
+          
+def chargebee_payment_success_service(chargebee_event):
+
+    customer_data = map_customer_data(chargebee_event)
+    cust_id = send_to_bubble(customer_data, data_type='User')
+
+    if (cust_id):
+
+        vehicle_info = get_vehicle_info(chargebee_event)
+        vehicle_data = map_vehicle_data(vehicle_info=vehicle_info, chargebee_data=chargebee_event, cust_id= cust_id,)
+
+        if (vehicle_data):
+            vehicle_id = send_to_bubble(vehicle_data, data_type='Vehicle')
+
+            if (vehicle_id):
+                all_insurance_products = get_from_bubble(data_type="Insurance Product")
+                rate_id_to_match = chargebee_event["content"]["invoice"]["line_items"][0]["entity_id"]
+                mileage_to_match = chargebee_event["content"]["subscription"]["cf_Vehicle Mileage"]
+                brokering_for = chargebee_event["content"]["subscription"]["cf_Brokering For"]
+                product = find_matching_product(all_insurance_products, rate_id_to_match, mileage_to_match)
+
+                if (product):
+                    merchant_id = get_merchant_from_bubble(data_type='Merchant', merchant_name=brokering_for)
+                    data_to_be_updated = {
+                         'Associated Vehicle': [vehicle_id],
+                         'Associated Insurance Product': [product['_id']],
+                         'Associated Merchants': [merchant_id]
+                    }
+                    update_bubble(cust_id=cust_id, payload=data_to_be_updated, data_type='User')
+                    sold_price = product.get('Insurer 1 Premium Total', 0)
+                    wholesale_price = product.get('Wholesale Price', 0)
+                    tax_type = product.get('Tax Type', '')
+                    dealership = 'yes' if product.get('Sales Plugin', False) else 'no'
+                    short_code = product.get('Product Short Code', '')
+
+                    output, rate = calculate_tax(sold_price, wholesale_price, tax_type, dealership, short_code)
+                    
+                    logger.info(f"Tax Output: {output}, Tax Rate: {rate}")
+                    #logger.info(f"Product Info: {product}")
+                    #logger.info(f"Vehicle Data: {vehicle_data}")
+
+                    rendered_html = template.render(
+                        title="Auto Cover",
+                        customer_data=customer_data,
+                        vehicle_data=vehicle_data,
+                        product_data=product
+                    )
+
+                    save_or_send_html(rendered_html)
+                else:
+                    logger.warning("No matching record found.")
+            else:
+                logger.warning("Failed to send vehicle data to Bubble.")
+        else:
+            logger.warning("Failed to map vehicle data.")
+    else:
+        logger.warning("Failed to send customer data to Bubble.")
+
+
 
 def map_customer_data(chargebee_event):
-    if chargebee_event:
-        if chargebee_event['event_type'] == 'payment_succeeded':
+            
             billing_address = chargebee_event['content']['customer']['billing_address']
             customer = chargebee_event['content']['customer']
-
-            # Full name
             full_name = f"{customer['first_name']} {customer['last_name']}"
-
-            # Check for D&N
             has_dn = 'Yes'  # Assuming D&N is always present in this context
-
-            # Address lines
             line1 = billing_address.get('line1', '')
             line2 = billing_address.get('line2', '')
-
-            # City + Country
             city_country = f"{billing_address.get('city', '')}, {billing_address.get('country', '')}"
-
-            # Postal Code (if available)
             postal_code = billing_address.get('postal_code', '')
-
-            # Phone Number and Email
             phone_number = customer.get('phone', '')
             email = customer.get('email', '')
-
-            # Associated Vehicle (hardcoded for illustration)
-            associated_vehicle = "[id]"
-
-            # List of insurance products, merchants, and merchant groups (hardcoded for illustration)
-            insurance_products = ["product_id1", "product_id2"]
-            merchants = ["merchant_id1", "merchant_id2"]
-            merchant_groups = ["group_id1", "group_id2"]
 
             result = {
                 "Full Name": full_name,
@@ -48,44 +97,40 @@ def map_customer_data(chargebee_event):
                 "Line 3: Address": city_country,
                 "Line 4: Address": postal_code if postal_code else '',
                 "Phone Number 2": phone_number,
-                "email": "testemail1233@gmail.com",
-                # "Associated Vehicle": associated_vehicle,
-                # "List of insurance products": insurance_products,
-                # "List of merchants": merchants,
-                # "List of merchants group": merchant_groups
+                "email": "tz235s212349@gmail.com"
             }
 
             return result
 
 
-def map_vehicle_data(vehicle_data, cust_id, chargebee_data):
+def map_vehicle_data(vehicle_info, chargebee_data, cust_id):
+
+    classification_details = vehicle_info['Response']['DataItems']['ClassificationDetails']
+    registration_details = vehicle_info['Response']['DataItems']['VehicleRegistration']
+    smmt_details = vehicle_info['Response']['DataItems']['SmmtDetails']
+
+    subscription_content = chargebee_data['content']['subscription']
+
+    is_new_vehicle = int(subscription_content['cf_Vehicle Mileage']) == 0
+
     vehicle_info = {
-    'Make': vehicle_data['Response']['DataItems']['ClassificationDetails']['Smmt']['Make'],
-    'Model': vehicle_data['Response']['DataItems']['ClassificationDetails']['Dvla']['Model'],
-    'Vehicle Trim': vehicle_data['Response']['DataItems']['ClassificationDetails']['Smmt']['Trim'],
-    'Style': vehicle_data['Response']['DataItems']['VehicleRegistration']['DoorPlanLiteral'], 
-    'Colour': vehicle_data['Response']['DataItems']['VehicleRegistration']['Colour'],
-    'VIN number': vehicle_data['Response']['DataItems']['VehicleRegistration']['Vin'],
-    'Engine capacity *': vehicle_data['Response']['DataItems']['VehicleRegistration']['EngineCapacity'],
-    'Fuel Type': vehicle_data['Response']['DataItems']['SmmtDetails']['FuelType'],
-    'First registered *': vehicle_data['Response']['DataItems']['VehicleRegistration']['DateFirstRegistered'],
-    'Vehicle Type': vehicle_data['Response']['DataItems']['SmmtDetails']['BodyStyle'],
-    'VRN': chargebee_data['content']['subscription']['cf_Vehicle Registration Number (Licence Plate)*'],
-    #'Annual mileage': [chargebee_data['content']['subscription']['cf_Vehicle Mileage']],
-    'Vehicle price *': chargebee_data['content']['invoice']['sub_total'],
-    'Dealer bought from': chargebee_data['content']['subscription']['cf_Dealer Name'],
-    'Sale Type': 'New' if int(chargebee_data['content']['subscription']['cf_Vehicle Mileage']) == 0 else 'Used',
-    'Delivery date': chargebee_data['content']['subscription']['created_at'],
-    'Associated User': cust_id
-}
+        'Make': classification_details['Smmt']['Make'],
+        'Model': classification_details['Dvla']['Model'],
+        'Vehicle Trim': classification_details['Smmt']['Trim'],
+        'Style': registration_details['DoorPlanLiteral'],
+        'Colour': registration_details['Colour'],
+        'VIN number': registration_details['Vin'],
+        'Engine capacity *': registration_details['EngineCapacity'],
+        'Fuel Type': smmt_details['FuelType'],
+        'First registered *': registration_details['DateFirstRegistered'],
+        'Vehicle Type': smmt_details['BodyStyle'],
+        'VRN': subscription_content['cf_Vehicle Registration Number (Licence Plate)*'],
+        'Annual mileage': subscription_content['cf_Vehicle Mileage'],
+        'Vehicle price *': subscription_content['cf_Vehicle Price'],
+        'Dealer bought from': subscription_content['cf_Dealer Name'],
+        'Sale Type': 'New' if is_new_vehicle else 'Used',
+        'Delivery date': subscription_content['created_at'],
+        'Associated User': cust_id
+    }
+
     return vehicle_info
-
-
-
-
-# VRN Number
-# Current point of sale milage
-# Price
-# Dealer Name
-# Sales Type (If milage is 0 then new if greaterr than 0 then used)
-# Delivery Date (Would be the date when the order is placed, i.e on the date chargebee had the order)
