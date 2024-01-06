@@ -1,11 +1,11 @@
-from utils.utils import send_to_bubble, get_vehicle_info, get_from_bubble, find_matching_record, calculate_tax, save_or_send_html, update_bubble, get_merchant_from_bubble
+from utils.utils import send_to_bubble, get_vehicle_info, get_from_bubble, find_matching_record, calculate_tax, save_or_send_pdf, update_bubble, get_merchant_from_bubble
 from config.logger import logger
 from jinja2 import Environment, FileSystemLoader
 
 TEMPLATE_FILE_PATH = "/home/saadi09/Documents/InsightHub Projects/AUTOCOVER/templates"
 
 template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
-template = template_env.get_template("test.html")
+template = template_env.get_template("SCOTT JONES Contract.html")
 
 
 def find_matching_product(all_records_dict, rate_id_to_match, mileage_to_match):
@@ -35,7 +35,7 @@ def chargebee_payment_success_service(chargebee_event):
                 rate_id_to_match = chargebee_event["content"]["invoice"]["line_items"][0]["entity_id"]
                 mileage_to_match = chargebee_event["content"]["subscription"]["cf_Vehicle Mileage"]
                 brokering_for = chargebee_event["content"]["subscription"]["cf_Brokering For"]
-                product = find_matching_product(all_insurance_products, rate_id_to_match, mileage_to_match)
+                product = find_matching_product(all_insurance_products, '91', mileage_to_match)
 
                 if (product):
                     merchant_id = get_merchant_from_bubble(data_type='Merchant', merchant_name=brokering_for)
@@ -64,7 +64,7 @@ def chargebee_payment_success_service(chargebee_event):
                         product_data=product
                     )
 
-                    save_or_send_html(rendered_html)
+                    save_or_send_pdf(rendered_html)
                 else:
                     logger.warning("No matching record found.")
             else:
@@ -97,7 +97,7 @@ def map_customer_data(chargebee_event):
                 "Line 3: Address": city_country,
                 "Line 4: Address": postal_code if postal_code else '',
                 "Phone Number 2": phone_number,
-                "email": "tz235s212349@gmail.com"
+                "email": email
             }
 
             return result
