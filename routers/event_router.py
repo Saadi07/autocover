@@ -15,7 +15,6 @@ event_router = APIRouter(
 def chargebee_payment_success_router(event: ChargebeeEvent = Body(...)):
     try:
         chargebee_event = dict(event)
-        
         if chargebee_event['event_type'] == 'payment_succeeded':
             chargebee_payment_success_service(chargebee_event)
         return {"status": "success"}

@@ -1,6 +1,10 @@
+pdfkit
 python-dotenv==1.0.0
 fastapi==0.65.2
+Jinja2
 requests==2.31.0
 uvicorn==0.14.0
 colorlog==6.7.0
 gunicorn==21.2.0
+
+

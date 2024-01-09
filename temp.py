@@ -156,3 +156,21 @@
 # output_pdf_filename = 'output_file.pdf'
 
 # convert_html_to_pdf(html_file_name, output_pdf_filename)
+
+# import os
+# from sendgrid import SendGridAPIClient
+# from sendgrid.helpers.mail import Mail
+
+# message = Mail(
+#     from_email='from_email@example.com',
+#     to_emails='to@example.com',
+#     subject='Sending with Twilio SendGrid is Fun',
+#     html_content='<strong>and easy to do anywhere, even with Python</strong>')
+# try:
+#     sg = SendGridAPIClient('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')
+#     response = sg.send(message)
+#     print(response.status_code)
+#     print(response.body)
+#     print(response.headers)
+# except Exception as e:
+#     print(e)
