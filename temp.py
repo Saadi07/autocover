@@ -1,5 +1,9 @@
 # from jinja2 import Undefined
-# from config.configuration import BUBBLE_API_URL , CHARGEBEE_WEBHOOK_SECRET , BUBBLE_HEADERS
+# from config.configuration import (
+#     BUBBLE_API_URL,
+#     CHARGEBEE_WEBHOOK_SECRET,
+#     BUBBLE_HEADERS,
+# )
 # import requests
 # import json
 
@@ -110,7 +114,6 @@
 #     return output, rate
 
 
-
 # # Example: Retrieve all records for "Insurance Product" and create a dictionary with "Rate id" as the key
 # all_records_dict = get_from_bubble("Insurance Product")
 
@@ -122,11 +125,11 @@
 # product = find_matching_record(all_records_dict, rate_id_to_match, mileage_to_match)
 
 # if product:
-#        sold_price = product.get('Insurer 1 Premium Total', 0) # Which sold price........... 
+#        sold_price = product.get('Insurer 1 Premium Total', 0) # Which sold price...........
 #        wholesale_price = product.get('Wholesale Price', 0)
 #        tax_type = product.get('Tax Type', '')
 #        dealership = 'yes' if product.get('Sales Plugin', False) else 'no' # From to get this as well..........
-#        short_code = product.get('Product Short Code', '') 
+#        short_code = product.get('Product Short Code', '')
 #        print(tax_type, sold_price)
 #        # Calculate tax
 #        output, rate = calculate_tax(sold_price, wholesale_price, tax_type, dealership, short_code)
@@ -157,20 +160,105 @@
 
 # convert_html_to_pdf(html_file_name, output_pdf_filename)
 
-# import os
-# from sendgrid import SendGridAPIClient
-# from sendgrid.helpers.mail import Mail
 
-# message = Mail(
-#     from_email='from_email@example.com',
-#     to_emails='to@example.com',
-#     subject='Sending with Twilio SendGrid is Fun',
-#     html_content='<strong>and easy to do anywhere, even with Python</strong>')
-# try:
-#     sg = SendGridAPIClient('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')
-#     response = sg.send(message)
-#     print(response.status_code)
-#     print(response.body)
-#     print(response.headers)
-# except Exception as e:
-#     print(e)
+# import sendgrid
+# import os
+# from sendgrid.helpers.mail import *
+
+# sg = sendgrid.SendGridAPIClient(
+#     api_key="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"
+# )
+# from_email = Email("admin@claims-gurus.co.uk")
+# to_email = To("saadiawan09@gmail.com")
+# subject = "Sending with SendGrid is Fun"
+# content = Content("text/plain", "and easy to do anywhere, even with Python")
+# mail = Mail(from_email, to_email, subject, content)
+# response = sg.client.mail.send.post(request_body=mail.get())
+# print(response.status_code)
+# print(response.body)
+# print(response.headers)
+
+
+# from config.configuration import (
+#     BUBBLE_API_URL,
+#     CHARGEBEE_WEBHOOK_SECRET,
+#     BUBBLE_HEADERS,
+#     VEHICLE_DATA_API_KEY,
+#     VEHICLE_DATAPACKAGE,
+# )
+# import requests
+# import json
+# from jinja2 import Undefined
+# import os
+import pdfkit
+
+# import base64
+# from sendgrid import SendGridAPIClient
+# from sendgrid.helpers.mail import Mail, Attachment
+from jinja2 import Environment, FileSystemLoader
+
+TEMPLATE_FILE_PATH = "C:/Users/hp/Desktop/autocover"
+template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
+template = template_env.get_template("SCOTT JONES Contract.html")
+
+
+# def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
+#     # Save HTML to a file
+#     html_file_path = "output.html"
+#     with open(html_file_path, "w") as f:
+#         f.write(rendered_html)
+
+#     pdf_file_path = r"C:/Users/hp/Desktop/autocover/output.pdf"
+#     # config = pdfkit.configuration(
+#     #     wkhtmltopdf=b"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+#     # )
+#     pdfkit.from_file(html_file_path, pdf_file_path)
+
+
+def pdf():
+    pdfkit.from_file("output.html", options={"enable-local-file-access": ""})
+
+
+pdf = pdf()
+
+#     # Set your SendGrid API key
+
+
+#     sendgrid_api_key = (
+#         "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"
+#     )
+#     sg = SendGridAPIClient(sendgrid_api_key)
+#     # Set sender and recipient email addresses
+#     from_email = "admin@claims-gurus.co.uk"
+#     to_email = to_email or "saadawanofficial09@gmail.com"
+#     # Create a Mail object with the PDF attachment
+#     message = Mail(
+#         from_email=from_email,
+#         to_emails=to_email,
+#         subject="AutoCover Contract",
+#         html_content="Please find the attached PDF.",
+#     )
+#     with open(pdf_file_path, "rb") as f:
+#         data = f.read()
+#         encoded_data = base64.b64encode(data).decode()
+#         attachment = Attachment()
+#         attachment.file_content = encoded_data
+#         attachment.file_type = "application/pdf"
+#         attachment.file_name = "output.pdf"
+#         attachment.disposition = "attachment"
+#         message.attachment = attachment
+#     # Send the email
+#     try:
+#         response = sg.send(message)
+#         print("Email sent successfully. Status code:", response.status_code)
+#     except Exception as e:
+#         print("Error sending email:", str(e))
+#     # Clean up temporary files
+#     os.remove(html_file_path)
+#     os.remove(pdf_file_path)
+
+
+rendered_html = template.render(
+    title="Auto Cover", customer_data={}, vehicle_data={}, product_data={}
+)
+save_or_send_pdf(rendered_html)

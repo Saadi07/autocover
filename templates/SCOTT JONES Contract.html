@@ -19,7 +19,8 @@
             margin: 0;
         }
 
-        html, body {
+        html,
+        body {
             height: 100%;
         }
 
@@ -85,7 +86,8 @@
 
         .vehicle-details label {
             font-weight: bold;
-            display: block; /* Makes each label appear on a new line */
+            display: block;
+            /* Makes each label appear on a new line */
             margin-bottom: 5px;
         }
 
@@ -108,316 +110,324 @@
         }
 
         /* Add your content styling here */
-
     </style>
-    <link rel="icon" type="image/png" href="https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2Fb50a64adbea2f4906089b6281c21f1c4.cdn.bubble.io%2Ff1686323407828x745880602792397700%2FAutoCover%2520Logo%2520dark%2520blue%25204.png?w=512&h=71&auto=compress&fit=crop">
+    <link rel="icon" type="image/png"
+        href="https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2Fb50a64adbea2f4906089b6281c21f1c4.cdn.bubble.io%2Ff1686323407828x745880602792397700%2FAutoCover%2520Logo%2520dark%2520blue%25204.png?w=512&h=71&auto=compress&fit=crop">
 </head>
 
 <body style="background: #F0F0F0">
-<div id="headerSection">
-    <h1 style="font-size: 50px;font-weight: bolder">
-        Scott Jones Contract
-    </h1>
-    <img src="https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2Fb50a64adbea2f4906089b6281c21f1c4.cdn.bubble.io%2Ff1686323407828x745880602792397700%2FAutoCover%2520Logo%2520dark%2520blue%25204.png?w=512&h=71&auto=compress&fit=crop"
-         width="356px" height="48px">
+    <div id="headerSection">
+        <h1 style="font-size: 50px;font-weight: bolder">
+            Scott Jones Contract
+        </h1>
+        <img src="https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2Fb50a64adbea2f4906089b6281c21f1c4.cdn.bubble.io%2Ff1686323407828x745880602792397700%2FAutoCover%2520Logo%2520dark%2520blue%25204.png?w=512&h=71&auto=compress&fit=crop"
+            width="356px" height="48px">
 
-</div>
-<div id="headingSection">
-    <h2>
-        Customer Details
-    </h2>
-
-</div>
-<div id="customerDetailSection"
-     style="background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px; padding: 10px 0px">
-    <div id="rowSection">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Full Name: </strong>
-            <p style="font-size: 15px">{{customer_data['Full Name']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-
-            <strong style="font-size: 16px">
-                Address:
-            </strong>
-            <p style="font-size: 15px">{{customer_data['Line 1: Address']+customer_data['Line 2: Address']+customer_data['Line 3: Address']+customer_data['Line 4: Address']}}</p>
-
-        </div>
     </div>
-    <div id="columnSection">
-        <div style="display:flex; align-items: center;align-content: center; gap:20px; flex-direction: row">
+    <div id="headingSection">
+        <h2>
+            Customer Details
+        </h2>
 
-            <strong style="font-size: 16px">
-                Phone Number:
-            </strong>
-            <p style="font-size: 15px">{{customer_data['Phone Number 2']}}</p>
-
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-
-            <strong style="font-size: 16px">
-                Email:
-            </strong>
-            <p style="font-size: 15px">{{customer_data['email']}}</p>
-
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-
-            <strong style="font-size: 16px">
-                Business Name:
-            </strong>
-            <p style="font-size: 15px">1 Curtis Close Newark England NG23 7QW</p>
-
-        </div>
     </div>
-</div>
-<div id="headingSection">
-    <h2>
-        Vehicle Details
-    </h2>
-
-</div>
-<div class="vehicle-details" style="background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px">
-    <div id="vrnSection" style="width: 60%">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                VRN: </strong>
-            <p style="font-size: 15px">{{vehicle_data['VRN']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                VIN: </strong>
-            <p style="font-size: 15px">{{vehicle_data['VIN number']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Delivery Date: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Delivery date']}}</p>
-        </div>
-    </div>
-    <div id="vrnSection" style="width: 60%">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Make: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Make']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Engine Capacity: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Engine capacity *']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Price Paid: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Vehicle price *']}}</p>
-        </div>
-    </div>
-    <div id="vrnSection" style="width: 60%">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Model: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Vehicle price *']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                First Registered: </strong>
-            <p style="font-size: 15px">{{vehicle_data['First registered *']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Dealer: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Dealer bought from']}}</p>
-        </div>
-    </div>
-    <div id="vrnSectionBelow" style="width: 35%">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Mileage: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Annual mileage']}}</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Vehicle Type: </strong>
-            <p style="font-size: 15px">{{vehicle_data['Vehicle Type']}}</p>
-        </div>
-    </div>
-    <!-- Additional fields -->
-    <div id="vrnSectionBelow"  style="width: 70%;">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Is Financed: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Is New Vehicle: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Is Imported: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Is Turbo Charged Petrol: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-    </div>
-    <div id="vrnSectionBelow" style="width: 70%;">
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                SAT Nav Cover: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Electric Roof Cover: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                4 Wheel Drive: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-        <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-            <strong style="font-size: 16px">
-                Catalytic Converter Cover: </strong>
-            <p style="font-size: 15px">Scott John</p>
-        </div>
-    </div>
-    <!-- Add more fields as required -->
-</div>
-<div id="headingSection">
-    <h2>
-        Product Summary
-    </h2>
-
-</div>
-<div style="display: flex; flex-direction: row; gap: 10px; padding: 0 20px; align-content: center; align-items: center; justify-content: space-between;background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px">
-    <div style="width: 80%;display: flex; flex-direction: row; gap: 10px; justify-content: space-between ">
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Product Type
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Product Type ']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Variant Name
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Variant Name']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Variant Term
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Variant Term']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Claim Limit
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Variant Claim limit']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Excess
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Variant Excess']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Sold Price
-            </strong>
-            <p style="font-size: 15px">
-                {{product_data['Wholesale Price']}}
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Funded </strong>
-            <p style="font-size: 15px">
-                No
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                Start Date </strong>
-            <p style="font-size: 15px">
-                22/11/2023
-            </p>
-        </div>
-        <div style="display: flex; flex-direction: column">
-            <strong style="font-size: 16px">
-                End Date
-            </strong>
-            <p style="font-size: 15px">
-                21/11/2026
-            </p>
-        </div>
-    </div>
-
-</div>
-<p style="padding: 0 20px">* Please refer to all the provided documentation for full details of cover. ** Prices are
-    inclusive of the appropriate tax at the rate shown. *** Cancelling 14 days after policy inception will incur a £35
-    fee</p>
-<div id="headingSection"
-     style="display: flex; flex-direction: row; justify-content: start; align-items: center; gap:500px; height:40px">
-    <h2>
-        Product Summary
-    </h2>
-    <h2>
-        Declaration
-    </h2>
-
-</div>
-<div style="padding:5px 20px; display: flex; flex-direction: row; width: 72%; justify-content: space-between;margin-top: 5px ">
-    <div style="display: flex; flex-direction: column">
-        <div style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
-            <strong style="font-size: 16px">Merchant:</strong>
-            <p style="font-size: 15px">AutoCover</p>
-        </div>
-        <div style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
-            <strong style="font-size: 16px">Sales Rep:</strong>
-            <p style="font-size: 15px">AutoCover</p>
-        </div>
-        <div style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
-            <strong style="font-size: 16px">Issue Date:</strong>
-            <p style="font-size: 15px">AutoCover</p>
-        </div>
-        <div style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
-            <strong style="font-size: 16px">Referrence Number:</strong>
-            <p style="font-size: 15px">AutoCover</p>
-        </div>
-        <strong style="font-size: 14px">AutoCover, 30 Applegarth Road, London, England, W14 0HY</strong>
-    </div>
-    <div style="background: white; border-radius: 20px;padding:30px 10px;display: flex; flex-direction: column; height: fit-content">
-        <p style="font-size: 14px;width: 80%">I have read, understood and agree to be bound by the terms and
-            conditions of these products.</p>
-        <div style="display:flex;justify-content: space-between ;  flex-direction: row">
+    <div id="customerDetailSection"
+        style="background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px; padding: 10px 0px">
+        <div id="rowSection">
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-                <strong style="font-size: 15px">Signature:</strong>
-                <p style="font-size: 14px">Scott John</p>
+                <strong style="font-size: 16px">
+                    Full Name: </strong>
+                <p style="font-size: 15px">{{customer_data['Full Name']}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
-                <strong style="font-size: 15px">Date:</strong>
-                <p style="font-size: 14px">22/11/2023</p>
+
+                <strong style="font-size: 16px">
+                    Address:
+                </strong>
+                <p style="font-size: 15px">{{customer_data['Line 1: Address']+customer_data['Line 2: Address']+customer_data['Line 3: Address']+customer_data['Line 4: Address']}}</p>
+
+            </div>
+        </div>
+        <div id="columnSection">
+            <div style="display:flex; align-items: center;align-content: center; gap:20px; flex-direction: row">
+
+                <strong style="font-size: 16px">
+                    Phone Number:
+                </strong>
+                <p style="font-size: 15px">{{customer_data['Phone Number 2']}}</p>
+
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+
+                <strong style="font-size: 16px">
+                    Email:
+                </strong>
+                <p style="font-size: 15px">{{customer_data['email']}}</p>
+
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+
+                <strong style="font-size: 16px">
+                    Business Name:
+                </strong>
+                <p style="font-size: 15px">1 Curtis Close Newark England NG23 7QW</p>
+
             </div>
         </div>
     </div>
-</div>
+    <div id="headingSection">
+        <h2>
+            Vehicle Details
+        </h2>
+
+    </div>
+    <div class="vehicle-details" style="background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px">
+        <div id="vrnSection" style="width: 60%">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    VRN: </strong>
+                <p style="font-size: 15px">{{vehicle_data['VRN']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    VIN: </strong>
+                <p style="font-size: 15px">{{vehicle_data['VIN number']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Delivery Date: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Delivery date']}}</p>
+            </div>
+        </div>
+        <div id="vrnSection" style="width: 60%">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Make: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Make']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Engine Capacity: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Engine capacity *']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Price Paid: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Vehicle price *']}}</p>
+            </div>
+        </div>
+        <div id="vrnSection" style="width: 60%">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Model: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Vehicle price *']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    First Registered: </strong>
+                <p style="font-size: 15px">{{vehicle_data['First registered *']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Dealer: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Dealer bought from']}}</p>
+            </div>
+        </div>
+        <div id="vrnSectionBelow" style="width: 35%">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Mileage: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Annual mileage']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Vehicle Type: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Vehicle Type']}}</p>
+            </div>
+        </div>
+        <!-- Additional fields -->
+        <div id="vrnSectionBelow" style="width: 70%;">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Is Financed: </strong>
+                <p style="font-size: 15px">Scott John</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Is New Vehicle: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Sale Type']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Is Imported: </strong>
+                <p style="font-size: 15px">{{vehicle_data['Imported']}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Is Turbo Charged Petrol: </strong>
+                <p style="font-size: 15px">{{vehicle_data["Turbo Charged"]}}</p>
+            </div>
+        </div>
+        <div id="vrnSectionBelow" style="width: 70%;">
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    SAT Nav Cover: </strong>
+                <p style="font-size: 15px">Scott John</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Electric Roof Cover: </strong>
+                <p style="font-size: 15px">Scott John</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    4 Wheel Drive: </strong>
+                <p style="font-size: 15px">{{vehicle_data["Drive Type"]}}</p>
+            </div>
+            <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                <strong style="font-size: 16px">
+                    Catalytic Converter Cover: </strong>
+                <p style="font-size: 15px">{{vehicle_data["Catalytic Converter"]}}</p>
+            </div>
+        </div>
+        <!-- Add more fields as required -->
+    </div>
+    <div id="headingSection">
+        <h2>
+            Product Summary
+        </h2>
+
+    </div>
+    <div
+        style="display: flex; flex-direction: row; gap: 10px; padding: 0 20px; align-content: center; align-items: center; justify-content: space-between;background: white; border-radius: 20px;margin-left:15px ; margin-right: 15px">
+        <div style="width: 80%;display: flex; flex-direction: row; gap: 10px; justify-content: space-between ">
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Product Type
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Product Type ']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Variant Name
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Variant Name']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Variant Term
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Variant Term']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Claim Limit
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Variant Claim limit']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Excess
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Variant Excess']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Sold Price
+                </strong>
+                <p style="font-size: 15px">
+                    {{product_data['Wholesale Price']}}
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Funded </strong>
+                <p style="font-size: 15px">
+                    No
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    Start Date </strong>
+                <p style="font-size: 15px">
+                    22/11/2023
+                </p>
+            </div>
+            <div style="display: flex; flex-direction: column">
+                <strong style="font-size: 16px">
+                    End Date
+                </strong>
+                <p style="font-size: 15px">
+                    21/11/2026
+                </p>
+            </div>
+        </div>
+
+    </div>
+    <p style="padding: 0 20px">* Please refer to all the provided documentation for full details of cover. ** Prices are
+        inclusive of the appropriate tax at the rate shown. *** Cancelling 14 days after policy inception will incur a
+        £35
+        fee</p>
+    <div id="headingSection"
+        style="display: flex; flex-direction: row; justify-content: start; align-items: center; gap:500px; height:40px">
+        <h2>
+            Product Summary
+        </h2>
+        <h2>
+            Declaration
+        </h2>
+
+    </div>
+    <div
+        style="padding:5px 20px; display: flex; flex-direction: row; width: 72%; justify-content: space-between;margin-top: 5px ">
+        <div style="display: flex; flex-direction: column">
+            <div
+                style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
+                <strong style="font-size: 16px">Merchant:</strong>
+                <p style="font-size: 15px">{{vehicle_data["Dealer bought from"]}}</p>
+            </div>
+            <div
+                style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
+                <strong style="font-size: 16px">Sales Rep:</strong>
+                <p style="font-size: 15px">{{vehicle_data["Sales Agent"]}}</p>
+            </div>
+            <div
+                style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
+                <strong style="font-size: 16px">Issue Date:</strong>
+                <p style="font-size: 15px">AutoCover</p>
+            </div>
+            <div
+                style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
+                <strong style="font-size: 16px">Reference Number:</strong>
+                <p style="font-size: 15px">AutoCover</p>
+            </div>
+            <strong style="font-size: 14px">AutoCover, 30 Applegarth Road, London, England, W14 0HY</strong>
+        </div>
+        <div
+            style="background: white; border-radius: 20px;padding:30px 10px;display: flex; flex-direction: column; height: fit-content">
+            <p style="font-size: 14px;width: 80%">I have read, understood and agree to be bound by the terms and
+                conditions of these products.</p>
+            <div style="display:flex;justify-content: space-between ;  flex-direction: row">
+                <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                    <strong style="font-size: 15px">Signature:</strong>
+                    <p style="font-size: 14px">Scott John</p>
+                </div>
+                <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
+                    <strong style="font-size: 15px">Date:</strong>
+                    <p style="font-size: 14px">1/14/24</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

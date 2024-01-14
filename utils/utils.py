@@ -2,6 +2,7 @@ from config.configuration import (
     BUBBLE_API_URL,
     CHARGEBEE_WEBHOOK_SECRET,
     BUBBLE_HEADERS,
+    SENDGRID_API_KEY,
     VEHICLE_DATA_API_KEY,
     VEHICLE_DATAPACKAGE,
 )
@@ -12,8 +13,15 @@ import os
 import pdfkit
 import base64
 
+import os
+from pyhtml2pdf import converter
+
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail, Attachment
+
+import sendgrid
+import os
+from sendgrid.helpers.mail import *
 
 
 def send_to_bubble(data, data_type):
@@ -224,51 +232,67 @@ def calculate_tax(
     return output, rate
 
 
-# def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
-#     # Save HTML to a file
-#     html_file_path = 'output.html'
-#     with open(html_file_path, 'w') as f:
-#         f.write(rendered_html)
+def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
+    # Save HTML to a file
+    html_file_path = "output.html"
+    with open(html_file_path, "w") as f:
+        f.write(rendered_html)
 
-#     # Convert HTML to PDF
-#     pdf_file_path = 'output.pdf'
-#     pdfkit.from_file(html_file_path, pdf_file_path)
+    path = os.path.abspath("output.html")
+    converter.convert(
+        f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
+    )
 
-#     if send_email:
-#         # Set your SendGrid API key
-#         sendgrid_api_key = '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'
-#         sg = SendGridAPIClient(sendgrid_api_key)
+    if send_email:
+        # Set your SendGrid API key
+        # sendgrid_api_key = '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'
+        sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
 
-#         # Set sender and recipient email addresses
-#         from_email = 'saadiawan09@gmail.com'
-#         to_email = to_email or 'saadawanofficial09@gmail.com'
+        # Set sender and recipient email addresses
+        # from_email = "admin@claims-gurus.co.uk"
+        # to_email = to_email or "marriam.siddiqui@gmail.com"
 
-#         # Create a Mail object with the PDF attachment
-#         message = Mail(
-#             from_email=from_email,
-#             to_emails=to_email,
-#             subject='AutoCover Contract',
-#             html_content='Please find the attached PDF.',
-#         )
+        from_email = Email("admin@claims-gurus.co.uk")
+        to_email = To("marriam.siddiqui@gmail.com")
 
-#         with open(pdf_file_path, 'rb') as f:
-#             data = f.read()
-#             encoded_data = base64.b64encode(data).decode()
+        # Create a Mail object with the PDF attachment
+        message = Mail(
+            from_email=from_email,
+            to_emails=to_email,
+            subject="AutoCover Contract",
+            html_content="Please find the attached PDF.",
+        )
 
-#             attachment = Attachment()
-#             attachment.file_content = encoded_data
-#             attachment.file_type = "application/pdf"
-#             attachment.file_name = "output.pdf"
-#             attachment.disposition = "attachment"
-#             message.attachment = attachment
+        with open("output.pdf", "rb") as f:
+            data = f.read()
+            encoded_data = base64.b64encode(data).decode()
 
-#         # Send the email
-#         try:
-#             response = sg.send(message)
-#             print("Email sent successfully. Status code:", response.status_code)
-#         except Exception as e:
-#             print("Error sending email:", str(e))
+            #     attachment = Attachment()
+            #     attachment.file_content = encoded_data
+            #     attachment.file_type = "application/pdf"
+            #     attachment.file_name = "output.pdf"
+            #     attachment.disposition = "attachment"
+            attachedFile = Attachment(
+                FileContent(encoded_data),
+                FileName("output.pdf"),
+                FileType("application/pdf"),
+                Disposition("attachment"),
+            )
+            message.attachment = attachedFile
 
-#         # Clean up temporary files
-#         os.remove(html_file_path)
-#         os.remove(pdf_file_path)
+        # Send the email
+        try:
+            # response = sg.send(message)
+            response = sg.client.mail.send.post(request_body=message.get())
+            # print(response.status_code)
+            # print(response.body)
+            # print(response.headers)
+            print(
+                "Email sent successfully. Status code:", response.status_code
+            )
+        except Exception as e:
+            print("Error sending email:", str(e))
+
+        # Clean up temporary files
+        os.remove(html_file_path)
+        os.remove("output.pdf")
