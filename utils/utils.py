@@ -5,6 +5,7 @@ from config.configuration import (
     SENDGRID_API_KEY,
     VEHICLE_DATA_API_KEY,
     VEHICLE_DATAPACKAGE,
+    CLOSEIO_KEY,
 )
 import requests
 import json
@@ -15,6 +16,8 @@ import base64
 
 import os
 from pyhtml2pdf import converter
+from closeio_api import Client
+
 
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail, Attachment
@@ -29,6 +32,8 @@ def send_to_bubble(data, data_type):
         BUBBLE_API_URL + data_type, headers=BUBBLE_HEADERS, json=data
     )
     result = json.loads(response.text)
+    print("result", result)
+    print("status", result.get("status"))
     return (
         result["id"]
         if result.get("status") == "success" and "id" in result
@@ -66,7 +71,7 @@ def get_from_bubble(data_type, limit=100):
             cursor += limit
         else:
             break
-
+    # print(all_results)
     return all_results
 
 
@@ -296,3 +301,10 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         # Clean up temporary files
         os.remove(html_file_path)
         os.remove("output.pdf")
+
+
+def send_data_to_closeio(data):
+    api = Client(CLOSEIO_KEY)
+    resp = api.post("lead", data=data)
+    print(resp)
+    return resp["updated_by"]

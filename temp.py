@@ -190,16 +190,16 @@
 # import json
 # from jinja2 import Undefined
 # import os
-import pdfkit
+# import pdfkit
 
-# import base64
-# from sendgrid import SendGridAPIClient
-# from sendgrid.helpers.mail import Mail, Attachment
-from jinja2 import Environment, FileSystemLoader
+# # import base64
+# # from sendgrid import SendGridAPIClient
+# # from sendgrid.helpers.mail import Mail, Attachment
+# from jinja2 import Environment, FileSystemLoader
 
-TEMPLATE_FILE_PATH = "C:/Users/hp/Desktop/autocover"
-template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
-template = template_env.get_template("SCOTT JONES Contract.html")
+# TEMPLATE_FILE_PATH = "C:/Users/hp/Desktop/autocover"
+# template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
+# template = template_env.get_template("SCOTT JONES Contract.html")
 
 
 # def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
@@ -215,11 +215,11 @@ template = template_env.get_template("SCOTT JONES Contract.html")
 #     pdfkit.from_file(html_file_path, pdf_file_path)
 
 
-def pdf():
-    pdfkit.from_file("output.html", options={"enable-local-file-access": ""})
+# def pdf():
+#     pdfkit.from_file("output.html", options={"enable-local-file-access": ""})
 
 
-pdf = pdf()
+# pdf = pdf()
 
 #     # Set your SendGrid API key
 
@@ -258,7 +258,72 @@ pdf = pdf()
 #     os.remove(pdf_file_path)
 
 
-rendered_html = template.render(
-    title="Auto Cover", customer_data={}, vehicle_data={}, product_data={}
-)
-save_or_send_pdf(rendered_html)
+# rendered_html = template.render(
+#     title="Auto Cover", customer_data={}, vehicle_data={}, product_data={}
+# )
+# save_or_send_pdf(rendered_html)
+
+from closeio_api import Client
+
+api = Client("api_06gU305xuXbhUchfk8dFkz.5Q65L7KKqdX33i446JWMvn")
+
+# data = {
+#     "status_label": "Customer",
+#     "opportunities": [],
+#     "html_url": "https://app.close.com/lead/lead_cinQ7TktJYK2Nzp2uCHC6Pe1t8lO3B7VhX0Cqnc7Y1Y/",
+#     "description": "",
+#     "created_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+#     "created_by_name": "Thomas Bellessort",
+#     "updated_by_name": "Thomas Bellessort",
+#     "date_created": "2024-01-01T08:02:16.106000+00:00",
+#     "updated_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+#     "id": "lead_cinQ7TktJYK2Nzp2uCHC6Pe1t8lO3B7VhX0Cqnc7Y1Y",
+#     "name": "Mya Eccleston",
+#     "tasks": [],
+#     "url": "https://claims-gurus.co.uk/version-test/admin_customer_detail/1704096129238x838973979615255300?",
+#     "date_updated": "2024-01-16T02:52:33.385000+00:00",
+#     "status_id": "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M",
+#     "display_name": "Mya Eccleston",
+#     "custom": {
+#         "1. End Date": "2026-11-27",
+#         "1. Price": 359.88,
+#         "1. Product": "Asset Protection Combined RTI and Finance GAP",
+#         "1. Start Date": "2023-11-28",
+#         "ClaimsGurus Customer ID": "1704096129238x838973979615255300",
+#     },
+# }
+
+data = {
+    "status_label": "Customer",
+    "opportunities": [],
+    "html_url": "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/",
+    "description": "",
+    "created_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+    "created_by_name": "Thomas Bellessort",
+    "updated_by_name": "Thomas Bellessort",
+    "date_created": "2023-11-14T18:53:19.960000+00:00",
+    "updated_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+    "id": "lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY",
+    "name": "Molly Robinson",
+    "tasks": [],
+    "url": "https://claims-gurus.co.uk/version-test/admin_customer_detail/1699987991907x153592285691448000?",
+    "date_updated": "2024-01-13T06:40:35.750000+00:00",
+    "status_id": "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M",
+    "display_name": "Molly Robinson",
+    "custom": {
+        "1. End Date": "2026-11-07",
+        "1. Price": 359.88,
+        "1. Product": "Asset Protection Combined RTI and Finance GAP",
+        "1. Start Date": "2023-11-08",
+        "ClaimsGurus Customer ID": "1699987991907x153592285691448000",
+        "Engine Size": "998",
+        "Financed?": "False",
+        "First Registered Date": "2018-08-31T19:00:00+00:00",
+        "Make/Model": "HYUNDAI I10 SE SEPetrol",
+        "Mileage": 69089,
+        "Vehicle - Price": 6495,
+        "VRM": "EO68DYV",
+    },
+}
+resp = api.post("lead", data=data)
+print(resp)
