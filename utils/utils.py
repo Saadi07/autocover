@@ -258,7 +258,7 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         # to_email = to_email or "marriam.siddiqui@gmail.com"
 
         from_email = Email("admin@claims-gurus.co.uk")
-        to_email = To("marriam.siddiqui@gmail.com")
+        # to_email = To("marriam.siddiqui@gmail.com")
 
         # Create a Mail object with the PDF attachment
         message = Mail(

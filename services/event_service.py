@@ -206,7 +206,7 @@ def chargebee_payment_success_service(chargebee_event):
             }
             print("close", close_io_data)
             send_data_to_closeio(data=close_io_data)
-            save_or_send_pdf(rendered_html)
+            save_or_send_pdf(rendered_html, to_email=customer_data["email"])
         else:
             logger.warning("No contract id")
     else:
