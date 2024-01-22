@@ -65,7 +65,7 @@ def chargebee_payment_success_service(chargebee_event):
         product = find_matching_product(
             all_insurance_products, rate_id_to_match, mileage_to_match
         )
-        print("PRODUCT: ", product)
+        # print("PRODUCT: ", product)
 
         if product:
             logger.info("found product")
@@ -186,27 +186,33 @@ def chargebee_payment_success_service(chargebee_event):
                 ]
             )
             iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
-            close_io_data["custom"]: {
+            fund = (
+                chargebee_event["content"]["invoice"]["total"]
+                - chargebee_event["content"]["invoice"]["amount_paid"]
+            )
+            funded = False if fund == 0 else True
+            close_io_data["custom"] = {
                 "1. End Date": iso8601_date_to,
                 "1. Price": chargebee_event["content"]["subscription"][
                     "subscription_items"
-                ]["amount"],
+                ][0]["amount"],
                 "1. Product": product["Variant Name"],
                 "1. Start Date": iso8601_date_from,
                 "ClaimsGurus Customer ID": "1699987991907x153592285691448000",
-                "Engine Size": vehicle_info["Engine capacity *"],
-                "Financed?": contract_info["Funded Product"],
-                "First Registered Date": vehicle_info["First registered *"],
-                "Make/Model": vehicle_info["Make"]
+                "Engine Size": vehicle_data["Engine capacity *"],
+                "Financed?": funded,
+                "First Registered Date": vehicle_data["First registered *"],
+                "Make/Model": vehicle_data["Make"]
                 + "/"
-                + vehicle_info["Model"],
-                "Mileage": vehicle_info["Annual mileage"],
-                "Vehicle - Price": vehicle_info["Vehicle price *"],
+                + vehicle_data["Model"],
+                "Mileage": vehicle_data["Annual mileage"],
+                "Vehicle - Price": vehicle_data["Vehicle price *"],
                 "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
             }
-            print("close", close_io_data)
+            # print("to send to close: ", close_io_data)
             send_data_to_closeio(data=close_io_data)
             save_or_send_pdf(rendered_html, to_email=customer_data["email"])
+
         else:
             logger.warning("No contract id")
     else:

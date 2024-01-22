@@ -306,5 +306,5 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
 def send_data_to_closeio(data):
     api = Client(CLOSEIO_KEY)
     resp = api.post("lead", data=data)
-    print(resp)
+    print("close resp", resp)
     return resp["updated_by"]
