@@ -33,7 +33,7 @@ def find_matching_product(all_records_dict, rate_id_to_match, mileage_to_match):
 
 def chargebee_payment_success_service(chargebee_event):
     print("start")
-    print("all chargebee", chargebee_event)
+    print("all chargebee here", chargebee_event)
     logger.info(f"CHARGEBEE DATA HERE: {chargebee_event}")
 
     customer_data = map_customer_data(chargebee_event)
