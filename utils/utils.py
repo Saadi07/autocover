@@ -35,18 +35,14 @@ def send_to_bubble(data, data_type):
     print("result", result)
     print("status", result.get("status"))
     return (
-        result["id"]
-        if result.get("status") == "success" and "id" in result
-        else False
+        result["id"] if result.get("status") == "success" and "id" in result else False
     )
 
 
 def update_bubble(cust_id, payload, data_type):
     bubble_update_url = f"{BUBBLE_API_URL}{data_type}/{cust_id}"
 
-    response = requests.put(
-        bubble_update_url, headers=BUBBLE_HEADERS, json=payload
-    )
+    response = requests.put(bubble_update_url, headers=BUBBLE_HEADERS, json=payload)
 
     print("Bubble update response:", response.text)
     return json.loads(response.text)
@@ -76,9 +72,7 @@ def get_from_bubble(data_type, limit=100):
 
 
 def get_merchant_from_bubble(data_type, merchant_name):
-    response = requests.get(
-        f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS
-    )
+    response = requests.get(f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS)
 
     if response.status_code == 200:
         data = response.json().get("response", {}).get("results", [])
@@ -119,9 +113,7 @@ def get_vehicle_info(chargebee_event):
         return ResponseJSON
 
     else:
-        ErrorContent = "Status Code: {}, Reason: {}".format(
-            r.status_code, r.reason
-        )
+        ErrorContent = "Status Code: {}, Reason: {}".format(r.status_code, r.reason)
         print(ErrorContent)
 
 
@@ -139,9 +131,7 @@ def find_matching_record(all_records, rate_id, mileage):
         return None
 
 
-def calculate_tax(
-    sold_price, wholesale_price, tax_type, dealership, short_code
-):
+def calculate_tax(sold_price, wholesale_price, tax_type, dealership, short_code):
     def is_empty(property):
         return (
             -1
@@ -244,9 +234,7 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         f.write(rendered_html)
 
     path = os.path.abspath("output.html")
-    converter.convert(
-        f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
-    )
+    converter.convert(f"file:///{path}", "output.pdf", print_options={"scale": 0.5})
 
     if send_email:
         # Set your SendGrid API key
@@ -292,9 +280,7 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             # print(response.status_code)
             # print(response.body)
             # print(response.headers)
-            print(
-                "Email sent successfully. Status code:", response.status_code
-            )
+            print("Email sent successfully. Status code:", response.status_code)
         except Exception as e:
             print("Error sending email:", str(e))
 
@@ -308,3 +294,13 @@ def send_data_to_closeio(data):
     resp = api.post("lead", data=data)
     print("close resp", resp)
     return resp["updated_by"]
+
+
+def get_contract_count_from_bubble():
+    response = requests.get(f"{BUBBLE_API_URL}Contract", headers=BUBBLE_HEADERS)
+    if response.status_code == 200:
+        data = response.json().get("response", {}).get("results", [])
+        return len(data)
+    else:
+        print(f"Error: {response.status_code}")
+        return None
