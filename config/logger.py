@@ -5,7 +5,7 @@ import colorlog
 logger = logging.getLogger("AUTOCOVER_LOGGER")
 logger.setLevel(logging.INFO)
 # Create a handler for file output
-# file_handler = logging.FileHandler('logs/app.log')
+file_handler = logging.FileHandler('logs/app.log')
 
 
 # Create a handler for console output

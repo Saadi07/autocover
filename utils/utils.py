@@ -7,6 +7,8 @@ from config.configuration import (
     VEHICLE_DATAPACKAGE,
     CLOSEIO_KEY,
 )
+
+from config.logger import logger
 import requests
 import json
 from jinja2 import Undefined
@@ -35,16 +37,20 @@ def send_to_bubble(data, data_type):
     print("result", result)
     print("status", result.get("status"))
     return (
-        result["id"] if result.get("status") == "success" and "id" in result else False
+        result["id"]
+        if result.get("status") == "success" and "id" in result
+        else False
     )
 
 
 def update_bubble(cust_id, payload, data_type):
     bubble_update_url = f"{BUBBLE_API_URL}{data_type}/{cust_id}"
 
-    response = requests.put(bubble_update_url, headers=BUBBLE_HEADERS, json=payload)
+    response = requests.patch(
+        bubble_update_url, headers=BUBBLE_HEADERS, json=payload
+    )
 
-    print("Bubble update response:", response.text)
+    logger.info(f"Bubble update response: {response.text}")
     return json.loads(response.text)
 
 
@@ -72,7 +78,9 @@ def get_from_bubble(data_type, limit=100):
 
 
 def get_merchant_from_bubble(data_type, merchant_name):
-    response = requests.get(f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS)
+    response = requests.get(
+        f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS
+    )
 
     if response.status_code == 200:
         data = response.json().get("response", {}).get("results", [])
@@ -113,7 +121,9 @@ def get_vehicle_info(chargebee_event):
         return ResponseJSON
 
     else:
-        ErrorContent = "Status Code: {}, Reason: {}".format(r.status_code, r.reason)
+        ErrorContent = "Status Code: {}, Reason: {}".format(
+            r.status_code, r.reason
+        )
         print(ErrorContent)
 
 
@@ -131,7 +141,9 @@ def find_matching_record(all_records, rate_id, mileage):
         return None
 
 
-def calculate_tax(sold_price, wholesale_price, tax_type, dealership, short_code):
+def calculate_tax(
+    sold_price, wholesale_price, tax_type, dealership, short_code
+):
     def is_empty(property):
         return (
             -1
@@ -234,7 +246,9 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         f.write(rendered_html)
 
     path = os.path.abspath("output.html")
-    converter.convert(f"file:///{path}", "output.pdf", print_options={"scale": 0.5})
+    converter.convert(
+        f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
+    )
 
     if send_email:
         # Set your SendGrid API key
@@ -280,9 +294,11 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             # print(response.status_code)
             # print(response.body)
             # print(response.headers)
-            print("Email sent successfully. Status code:", response.status_code)
+            logger.info(
+                f"Email sent successfully. Status code: {response.status_code}"
+            )
         except Exception as e:
-            print("Error sending email:", str(e))
+            logger.info(f"Error sending email: {str(e)}")
 
         # Clean up temporary files
         os.remove(html_file_path)
@@ -292,15 +308,26 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
 def send_data_to_closeio(data):
     api = Client(CLOSEIO_KEY)
     resp = api.post("lead", data=data)
-    print("close resp", resp)
-    return resp["updated_by"]
+    return resp
 
 
 def get_contract_count_from_bubble():
-    response = requests.get(f"{BUBBLE_API_URL}Contract", headers=BUBBLE_HEADERS)
-    if response.status_code == 200:
-        data = response.json().get("response", {}).get("results", [])
-        return len(data)
-    else:
-        print(f"Error: {response.status_code}")
-        return None
+    total_count = 0
+    page = 1
+    while True:
+        response = requests.get(
+            f"{BUBBLE_API_URL}Contract",
+            headers=BUBBLE_HEADERS,
+            params={"page": page},
+        )
+        if response.status_code == 200:
+            data = response.json().get("response", {}).get("results", [])
+            if not data:
+                break  # No more pages, exit the loop
+            total_count += len(data)
+            page += 1
+        else:
+            print(f"Error: {response.status_code}")
+            return None
+
+    return total_count

@@ -8,7 +8,7 @@ from utils.utils import (
     get_merchant_from_bubble,
     save_or_send_pdf,
     send_data_to_closeio,
-    get_contract_count_from_bubble
+    get_contract_count_from_bubble,
 )
 from config.logger import logger
 from jinja2 import Environment, FileSystemLoader
@@ -21,9 +21,13 @@ template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
 template = template_env.get_template("SCOTT JONES Contract.html")
 
 
-def find_matching_product(all_records_dict, rate_id_to_match, mileage_to_match):
+def find_matching_product(
+    all_records_dict, rate_id_to_match, mileage_to_match
+):
     # print("charge rate", rate_id_to_match)
-    product = find_matching_record(all_records_dict, rate_id_to_match, mileage_to_match)
+    product = find_matching_record(
+        all_records_dict, rate_id_to_match, mileage_to_match
+    )
 
     if not product:
         logger.warning("No matching record found.")
@@ -32,40 +36,39 @@ def find_matching_product(all_records_dict, rate_id_to_match, mileage_to_match):
 
 
 def chargebee_payment_success_service(chargebee_event):
-    print("start")
-    print("all chargebee here", chargebee_event)
-    logger.info(f"CHARGEBEE DATA HERE: {chargebee_event}")
+    logger.info("starting")
+    # logger.info(f"CHARGEBEE DATA HERE: {chargebee_event}")
 
     customer_data = map_customer_data(chargebee_event)
-    # print("customer_data", customer_data)
+    logger.info(f"customer_data: {customer_data}")
     cust_id = send_to_bubble(customer_data, data_type="User")
-    print("customer id", cust_id)
     if cust_id:
         logger.info(f"Customer Data sent to Bubble. Customer id: {cust_id}")
         vehicle_info = get_vehicle_info(chargebee_event)
-        # print(vehicle_info)
+
         all_insurance_products = get_from_bubble(data_type="Insurance Product")
 
-        # rate_id_to_match = chargebee_event["content"]["invoice"]["line_items"][
-        #     0
-        # ]["entity_id"]
-        rate_id_to_match = "Jigsaw-RTI-25"
-        print("rate id", rate_id_to_match)
+        rate_id_to_match = chargebee_event["content"]["invoice"]["line_items"][
+            0
+        ]["entity_id"]
+        # rate_id_to_match = "Jigsaw-RTI-25"
+        logger.info(f"rate id: {rate_id_to_match}")
         mileage_to_match = chargebee_event["content"]["subscription"][
             "cf_Vehicle Mileage"
         ]
-        brokering_for = chargebee_event["content"]["subscription"]["cf_Brokering For"]
+        brokering_for = chargebee_event["content"]["subscription"][
+            "cf_Brokering For"
+        ]
         # product = find_matching_product(
         #     all_insurance_products, "209", mileage_to_match
         # )
-        # print("all prods", all_insurance_products)
+        logger.info("all prods: {all_insurance_products}")
         product = find_matching_product(
             all_insurance_products, rate_id_to_match, mileage_to_match
         )
-        print("PRODUCT: ", product)
 
         if product:
-            logger.info("found product")
+            logger.info(f"found product {product}")
             merchant_id = get_merchant_from_bubble(
                 data_type="Merchant", merchant_name=brokering_for
             )
@@ -73,13 +76,34 @@ def chargebee_payment_success_service(chargebee_event):
                 logger.info(f"found merchant id: {merchant_id}")
             associated_insurance_product = [product["_id"]]
             associated_merchant = merchant_id
-
+            data_to_be_updated = {
+                "Associated Merchants": [
+                    "1694197230597x897747846563364900",
+                    "1698764936036x648723526821609500",
+                    "1704910498263x918957411762176000",
+                    "1704911158504x387824209589698560",
+                    "1704911205052x327579426608906240",
+                    "1704911288172x528506583654858750",
+                    "1704911354669x666828151602544600",
+                    "1704911438137x190060258507096060",
+                    "1704973868071x923211365734154200",
+                    "1704973932535x571884127175049200",
+                    "1705911756843x142013061321457660",
+                ],
+                "Associated Merchant Group": [
+                    "1694182693471x292524019912540160"
+                ],
+            }
+            response = update_bubble(
+                cust_id=cust_id, payload=data_to_be_updated, data_type="User"
+            )
+            logger.info(f"updating user data {response}")
             sold_price = product.get("Insurer 1 Premium Total", 0)
             wholesale_price = product.get("Wholesale Price", 0)
             tax_type = product.get("Tax Type", "")
             dealership = "yes" if product.get("Sales Plugin", False) else "no"
             short_code = product.get("Product Short Code", "")
-            
+
             output, rate = calculate_tax(
                 sold_price,
                 wholesale_price,
@@ -100,10 +124,10 @@ def chargebee_payment_success_service(chargebee_event):
             associated_insurance_product=associated_insurance_product,
             associated_merchant=associated_merchant,
         )
-        # print("vehicledata", vehicle_data)
+
         if vehicle_data:
             try:
-                # print("vehicle data", vehicle_data)
+                logger.info(f"vehicledata: {vehicle_data}")
                 vehicle_id = send_to_bubble(vehicle_data, data_type="Vehicle")
             except Exception as e:
                 logger.error(f"An unexpected error occurred: {e}")
@@ -116,10 +140,11 @@ def chargebee_payment_success_service(chargebee_event):
                 product_data=product,
             )
 
+        contract_info = {}
         contract_info = map_contract_data(
             vehicle_info=vehicle_info, chargebee_event=chargebee_event
         )
-        contract_info = {}
+
         contract_info["Merchant Name"] = brokering_for
         contract_info["Sold Price"] = sold_price
         contract_info["Insurer"] = product["Insurer 1"]
@@ -127,9 +152,15 @@ def chargebee_payment_success_service(chargebee_event):
         #     "Associated Insurance Product"
         # ] = associated_insurance_product
         contract_info["Associated Vehicle"] = vehicle_id
+
         contract_count = get_contract_count_from_bubble()
-        contract_info["Contract ID"] = "AC"+ str(contract_count+1)
-        contract_info["Final Total Associated Costs"] = product['Merchant Commission Value']+sold_price
+        if contract_count is not None:
+            contract_info["Contract ID"] = "AC" + str(contract_count + 1)
+        else:
+            contract_info["Contract ID"] = "AC0"
+        contract_info["Final Total Associated Costs"] = (
+            product["Merchant Commission Value"] + sold_price
+        )
         contract_info["Final Merchant Tax Amount"] = 0
         contract_info["Final Merchant Wholesale Tax Rate"] = 0.12
         contract_info["Final Merchant Wholesale Price"] = 0
@@ -142,6 +173,8 @@ def chargebee_payment_success_service(chargebee_event):
         ]
         contract_info["Associated Insurance Product"] = product["_id"]
         contract_info["Final RRP"] = product["RRP"]
+
+        logger.info(f"sending this data in contract bubble: {contract_info}")
         # if product["Variant Claim limit"]:
         #     contract_info["Remaining Claim Budget"] = product[
         #         "Variant Claim limit"
@@ -160,7 +193,9 @@ def chargebee_payment_success_service(chargebee_event):
             date_created_timestamp = datetime.utcfromtimestamp(
                 chargebee_event["content"]["subscription"]["created_at"]
             )
-            iso8601_date_created = date_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+            iso8601_date_created = date_created_timestamp.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
             close_io_data["date_created"] = iso8601_date_created
             close_io_data[
                 "updated_by"
@@ -174,18 +209,26 @@ def chargebee_payment_success_service(chargebee_event):
             date_updated_timestamp = datetime.utcfromtimestamp(
                 chargebee_event["content"]["invoice"]["updated_at"]
             )
-            iso8601_date_updated = date_updated_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+            iso8601_date_updated = date_updated_timestamp.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
             close_io_data["date_updated"] = iso8601_date_updated
             close_io_data[
                 "status_id"
             ] = "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"
             close_io_data["display_name"] = customer_data["Full Name"]
             date_from_timestamp = datetime.utcfromtimestamp(
-                chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
+                chargebee_event["content"]["invoice"]["line_items"][0][
+                    "date_from"
+                ]
             )
-            iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+            iso8601_date_from = date_from_timestamp.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
             date_to_timestamp = datetime.utcfromtimestamp(
-                chargebee_event["content"]["invoice"]["line_items"][0]["date_to"]
+                chargebee_event["content"]["invoice"]["line_items"][0][
+                    "date_to"
+                ]
             )
             iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
             fund = (
@@ -204,15 +247,41 @@ def chargebee_payment_success_service(chargebee_event):
                 "Engine Size": vehicle_data["Engine capacity *"],
                 "Financed?": funded,
                 "First Registered Date": vehicle_data["First registered *"],
-                "Make/Model": vehicle_data["Make"] + "/" + vehicle_data["Model"],
+                "Make/Model": vehicle_data["Make"]
+                + "/"
+                + vehicle_data["Model"],
                 "Mileage": vehicle_data["Annual mileage"],
                 "Vehicle - Price": vehicle_data["Vehicle price *"],
                 "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
             }
             # print("to send to close: ", close_io_data)
-            send_data_to_closeio(data=close_io_data)
-            save_or_send_pdf(rendered_html, to_email=customer_data["email"])
+            resp = send_data_to_closeio(data=close_io_data)
+            logger.info(f"sending data to close, close response {resp}")
 
+            email_response = save_or_send_pdf(
+                rendered_html, to_email=customer_data["email"]
+            )
+
+            if email_response.status_code == 202:
+                data_to_be_updated = {
+                    "Customer Status": "Confirmed",
+                }
+                response = update_bubble(
+                    cust_id=cust_id,
+                    payload=data_to_be_updated,
+                    data_type="User",
+                )
+                logger.info(f"user status update {response}")
+            else:
+                data_to_be_updated = {
+                    "Customer Status": "Awaiting Confirmation",
+                }
+                response = update_bubble(
+                    cust_id=cust_id,
+                    payload=data_to_be_updated,
+                    data_type="User",
+                )
+                logger.error(f"user status update {response}")
         else:
             logger.warning("No contract id")
     else:
@@ -226,9 +295,7 @@ def map_customer_data(chargebee_event):
     has_dn = "Yes"  # Assuming D&N is always present in this context
     line1 = billing_address.get("line1", "")
     line2 = billing_address.get("line2", "")
-    city_country = (
-        f"{billing_address.get('city', '')}, {billing_address.get('country', '')}"
-    )
+    city_country = f"{billing_address.get('city', '')}, {billing_address.get('country', '')}"
     postal_code = billing_address.get("postal_code", "")
     phone_number = customer.get("phone", "")
     email = customer.get("email", "")
@@ -257,10 +324,14 @@ def map_vehicle_data(
     classification_details = vehicle_info["Response"]["DataItems"][
         "ClassificationDetails"
     ]
-    registration_details = vehicle_info["Response"]["DataItems"]["VehicleRegistration"]
+    registration_details = vehicle_info["Response"]["DataItems"][
+        "VehicleRegistration"
+    ]
     smmt_details = vehicle_info["Response"]["DataItems"]["SmmtDetails"]
 
-    technical_details = vehicle_info["Response"]["DataItems"]["TechnicalDetails"]
+    technical_details = vehicle_info["Response"]["DataItems"][
+        "TechnicalDetails"
+    ]
 
     subscription_content = chargebee_data["content"]["subscription"]
 
@@ -286,7 +357,9 @@ def map_vehicle_data(
         # "Catalytic Converter": "Yes"
         # if technical_details["General"]["Engine"]["FuelCatalyst"] == "C"
         # else "No",
-        "VRN": subscription_content["cf_Vehicle Registration Number (Licence Plate)*"],
+        "VRN": subscription_content[
+            "cf_Vehicle Registration Number (Licence Plate)*"
+        ],
         "Annual mileage": subscription_content["cf_Vehicle Mileage"],
         "Vehicle price *": subscription_content["cf_Vehicle Price"],
         "Dealer bought from": subscription_content["cf_Dealer Name"],
@@ -308,7 +381,7 @@ def map_contract_data(chargebee_event, vehicle_info):
     )
     funded = "No" if fund == 0 else "Yes"
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
-    
+
     customer = chargebee_event["content"]["customer"]
     full_name = f"{customer['first_name']} {customer['last_name']}"
     line1 = billing_address.get("line1", "")
@@ -318,7 +391,9 @@ def map_contract_data(chargebee_event, vehicle_info):
     total_tax_amount = 0
     for line_item in line_items:
         total_tax_amount += line_item.get("tax_amount", 0)
-    registration_details = vehicle_info["Response"]["DataItems"]["VehicleRegistration"]
+    registration_details = vehicle_info["Response"]["DataItems"][
+        "VehicleRegistration"
+    ]
     subscription_content = chargebee_event["content"]["subscription"]
     vrm = vehicle_info["Request"]["DataKeys"]["Vrm"]
     date_from_timestamp = datetime.utcfromtimestamp(
@@ -340,14 +415,19 @@ def map_contract_data(chargebee_event, vehicle_info):
         "Final Customer Tax Amount": total_tax_amount,
         "Reconciled": "Yes",
         "static_vehicle_colour": registration_details["Colour"],
-        "static_vehicle_engine_capacity": registration_details["EngineCapacity"],
+        "static_vehicle_engine_capacity": registration_details[
+            "EngineCapacity"
+        ],
         "Policy End Date": iso8601_date_to,
         "Policy Start Date": iso8601_date_from,
         "static_vehicle_mileage": subscription_content["cf_Vehicle Mileage"],
         "static_vehicle_vrm": vrm,
         "Monthly Product": "No",
         "Contract Status": "Live",
-        "Associated Sales Reps": "thomas@autocover.io",
-        "Contract": "PDF",
+        "Associated Sales Reps": ["thomas@autocover.io"],
+        "Final Insurer 1 Underwriting Price": 100,  # dummy value
+        "Final Other Merchant Costs": 100,
+        "Final Regional Manager Profit": 100
+        # "Contract": "PDF",
     }
     return contract_info
