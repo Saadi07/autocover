@@ -17,6 +17,7 @@ def chargebee_payment_success_router(event: ChargebeeEvent = Body(...)):
         chargebee_event = dict(event)
         if chargebee_event['event_type'] == 'payment_succeeded':
             chargebee_payment_success_service(chargebee_event)
+        print("Here")
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Error occurred while processing chargebee event: {e}")

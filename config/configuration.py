@@ -21,3 +21,7 @@ BUBBLE_HEADERS = {
     "Authorization": f"Bearer {BUBBLE_API_KEY}",
     "Content-Type": "application/json",
 }
+BUBBLE_HEADERS2 = {
+    "Authorization": f"bearer {BUBBLE_API_KEY}",
+    "Content-Type": "application/json",
+}
