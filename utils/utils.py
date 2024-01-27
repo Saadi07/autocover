@@ -35,21 +35,25 @@ def send_to_bubble(data, data_type):
         BUBBLE_API_URL + data_type, headers=BUBBLE_HEADERS, json=data
     )
     result = json.loads(response.text)
-    print("result", result)
-    print("status", result.get("status"))
+    # print("result", result)
+    # print("status", result.get("status"))
     return (
-        result["id"] if result.get("status") == "success" and "id" in result else False
+        result["id"]
+        if result.get("status") == "success" and "id" in result
+        else False
     )
 
 
 def update_bubble(cust_id, payload, data_type):
     bubble_update_url = f"{BUBBLE_API_URL}{data_type}/{cust_id}"
-    print("bubble_update_url", bubble_update_url)
-    print("payload", payload)
-    print("headers", BUBBLE_HEADERS)
+    logger.info(f"bubble_update_url {bubble_update_url}")
+    # print("payload", payload)
+    # print("headers", BUBBLE_HEADERS)
 
-    response = requests.patch(bubble_update_url, headers=BUBBLE_HEADERS2, json=payload)
-    print("response", response)
+    response = requests.patch(
+        bubble_update_url, headers=BUBBLE_HEADERS2, json=payload
+    )
+    logger.info(f" update bubble response {response}")
 
     logger.info(f"Bubble update response: {response.text}")
     if response.status_code == 204:
@@ -81,7 +85,9 @@ def get_from_bubble(data_type, limit=100):
 
 
 def get_merchant_from_bubble(data_type, merchant_name):
-    response = requests.get(f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS)
+    response = requests.get(
+        f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS
+    )
 
     if response.status_code == 200:
         data = response.json().get("response", {}).get("results", [])
@@ -122,7 +128,9 @@ def get_vehicle_info(chargebee_event):
         return ResponseJSON
 
     else:
-        ErrorContent = "Status Code: {}, Reason: {}".format(r.status_code, r.reason)
+        ErrorContent = "Status Code: {}, Reason: {}".format(
+            r.status_code, r.reason
+        )
         print(ErrorContent)
 
 
@@ -140,7 +148,9 @@ def find_matching_record(all_records, rate_id, mileage):
         return None
 
 
-def calculate_tax(sold_price, wholesale_price, tax_type, dealership, short_code):
+def calculate_tax(
+    sold_price, wholesale_price, tax_type, dealership, short_code
+):
     def is_empty(property):
         return (
             -1
@@ -243,7 +253,9 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         f.write(rendered_html)
 
     path = os.path.abspath("output.html")
-    converter.convert(f"file:///{path}", "output.pdf", print_options={"scale": 0.5})
+    converter.convert(
+        f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
+    )
 
     if send_email:
         # Set your SendGrid API key
@@ -289,7 +301,10 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             # print(response.status_code)
             # print(response.body)
             # print(response.headers)
-            logger.info(f"Email sent successfully. Status code: {response.status_code}")
+            logger.info(
+                f"Email sent successfully. Status code: {response.status_code}"
+            )
+            return response.status_code
         except Exception as e:
             logger.info(f"Error sending email: {str(e)}")
 
@@ -305,22 +320,15 @@ def send_data_to_closeio(data):
 
 
 def get_contract_count_from_bubble():
-    total_count = 0
-    page = 1
-    while True:
-        response = requests.get(
-            f"{BUBBLE_API_URL}Contract",
-            headers=BUBBLE_HEADERS,
-            params={"page": page},
-        )
-        if response.status_code == 200:
-            data = response.json().get("response", {}).get("results", [])
-            if not data:
-                break  # No more pages, exit the loop
-            total_count += len(data)
-            page += 1
-        else:
-            print(f"Error: {response.status_code}")
-            return None
-
-    return total_count
+    response = requests.get(
+        f"{BUBBLE_API_URL}Contract", headers=BUBBLE_HEADERS
+    )
+    if response.status_code == 200:
+        # print("contract response:", response)
+        first_count = response.json().get("response", {}).get("count")
+        remaining = response.json().get("response", {}).get("remaining")
+        print(first_count + remaining)
+        return first_count + remaining
+    else:
+        print(f"Error: {response.status_code}")
+        return None
