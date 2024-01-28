@@ -66,29 +66,23 @@ def chargebee_payment_success_service(chargebee_event):
         product = find_matching_product(
             all_insurance_products, rate_id_to_match, mileage_to_match
         )
-
+        merchant_id = ""
         if product:
             logger.info(f"found product {product}")
-            merchant_id = get_merchant_from_bubble(
-                data_type="Merchant", merchant_name=brokering_for
-            )
-            if merchant_id:
-                logger.info(f"found merchant id: {merchant_id}")
+            if brokering_for == "Jigsaw Finance":
+                merchant_id = "1694197230597x897747846563364900"
+            elif brokering_for == "Kandoo":
+                merchant_id = "1698764936036x648723526821609500"
+
+
+            # if merchant_id:
+            #     logger.info(f"found merchant id: {merchant_id}")
             associated_insurance_product = [product["_id"]]
             associated_merchant = merchant_id
-            print("associated_merchant", associated_merchant)
+            # print("associated_merchant", associated_merchant)
             data_to_be_updated = {
                 "Associated Merchants": [
-                    "1698764936036x648723526821609500",
-                    "1704910498263x918957411762176000",
-                    "1704911158504x387824209589698560",
-                    "1704911205052x327579426608906240",
-                    "1704911288172x528506583654858750",
-                    "1704911354669x666828151602544600",
-                    "1704911438137x190060258507096060",
-                    "1704973868071x923211365734154200",
-                    "1704973932535x571884127175049200",
-                    "1705911756843x142013061321457660",
+                   associated_merchant
                 ],
                 "Associated Merchant Group": [
                     "1694182693471x292524019912540160"
