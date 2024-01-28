@@ -67,7 +67,7 @@ def chargebee_payment_success_service(chargebee_event):
         product = find_matching_product(
             all_insurance_products, rate_id_to_match, mileage_to_match
         )
-
+        merchant_id = ""
         if product:
             logger.info(f"found product {product}")
             merchant_id = get_merchant_from_bubble(
