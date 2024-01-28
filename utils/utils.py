@@ -94,7 +94,7 @@ def get_merchant_from_bubble(data_type, merchant_name):
 
         for merchant in data:
             # print(merchant)
-            if merchant.get("Merchant Name") == "HSH Local":
+            if merchant.get("Merchant Name") == merchant_name:
                 # print(merchant)
                 return merchant.get("_id")
         return None
@@ -295,17 +295,24 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             message.attachment = attachedFile
 
         # Send the email
+        # logger.info(f"about to send email")
+        print("about to send email")
         try:
             # response = sg.send(message)
             response = sg.client.mail.send.post(request_body=message.get())
-            # print(response.status_code)
-            # print(response.body)
+            logger.info(
+                f"sendgrid stuff: {response.status_code},body: {response.body}"
+            )
+            print(
+                "response from sendgrid:", response.status_code, response.body
+            )
             # print(response.headers)
             logger.info(
                 f"Email sent successfully. Status code: {response.status_code}"
             )
             return response.status_code
         except Exception as e:
+            print("error in sendgrid: ", e)
             logger.info(f"Error sending email: {str(e)}")
 
         # Clean up temporary files
@@ -316,6 +323,12 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
 def send_data_to_closeio(data):
     api = Client(CLOSEIO_KEY)
     resp = api.post("lead", data=data)
+    return resp
+
+
+def create_contact(data):
+    api = Client(CLOSEIO_KEY)
+    resp = api.post("contact", data=data)
     return resp
 
 

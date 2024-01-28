@@ -268,6 +268,30 @@ from closeio_api import Client
 api = Client("api_06gU305xuXbhUchfk8dFkz.5Q65L7KKqdX33i446JWMvn")
 
 # data = {
+#     # "lead_id":"lead_QyNaWw4fdSwxl5Mc5daMFf3Y27PpIcH0awPbC9l7uyo",
+#     "name":"John Smith",
+#     "title":"President",
+#     "phones":[
+#         {"phone":"9045551234","type":"mobile"}
+#     ],
+#     "emails":[
+#         {"email":"john@example.com","type":"office"}
+#     ],
+#     "urls":[
+#         {"url":"http://twitter.com/google/","type":"url"}
+#     ],
+#     "custom.cf_j0P7kHmgFTZZnYBFtyPSZ3uQw4dpW8xKcW7Krps8atj": "Account Executive"
+# }
+
+# resp = api.post('contact', data=data)
+# print(resp)
+
+id = "lead_svUZz2eg0wS86q7Zu2m0kcaJseBgzSJljYwsepcRnhl"
+resp = api.get("lead/{id}")
+print(resp)
+
+
+# data = {
 #     "status_label": "Customer",
 #     "opportunities": [],
 #     "html_url": "https://app.close.com/lead/lead_cinQ7TktJYK2Nzp2uCHC6Pe1t8lO3B7VhX0Cqnc7Y1Y/",
@@ -293,37 +317,37 @@ api = Client("api_06gU305xuXbhUchfk8dFkz.5Q65L7KKqdX33i446JWMvn")
 #     },
 # }
 
-data = {
-    "status_label": "Customer",
-    "opportunities": [],
-    "html_url": "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/",
-    "description": "",
-    "created_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
-    "created_by_name": "Thomas Bellessort",
-    "updated_by_name": "Thomas Bellessort",
-    "date_created": "2023-11-14T18:53:19.960000+00:00",
-    "updated_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
-    "id": "lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY",
-    "name": "Molly Robinson",
-    "tasks": [],
-    "url": "https://claims-gurus.co.uk/version-test/admin_customer_detail/1699987991907x153592285691448000?",
-    "date_updated": "2024-01-13T06:40:35.750000+00:00",
-    "status_id": "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M",
-    "display_name": "Molly Robinson",
-    "custom": {
-        "1. End Date": "2026-11-07",
-        "1. Price": 359.88,
-        "1. Product": "Asset Protection Combined RTI and Finance GAP",
-        "1. Start Date": "2023-11-08",
-        "ClaimsGurus Customer ID": "1699987991907x153592285691448000",
-        "Engine Size": "998",
-        "Financed?": "False",
-        "First Registered Date": "2018-08-31T19:00:00+00:00",
-        "Make/Model": "HYUNDAI I10 SE SEPetrol",
-        "Mileage": 69089,
-        "Vehicle - Price": 6495,
-        "VRM": "EO68DYV",
-    },
-}
-resp = api.post("lead", data=data)
-print(resp)
+# data = {
+#     "status_label": "Customer",
+#     "opportunities": [],
+#     "html_url": "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/",
+#     "description": "",
+#     "created_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+#     "created_by_name": "Thomas Bellessort",
+#     "updated_by_name": "Thomas Bellessort",
+#     "date_created": "2023-11-14T18:53:19.960000+00:00",
+#     "updated_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
+#     "id": "lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY",
+#     "name": "Molly Robinson",
+#     "tasks": [],
+#     "url": "https://claims-gurus.co.uk/version-test/admin_customer_detail/1699987991907x153592285691448000?",
+#     "date_updated": "2024-01-13T06:40:35.750000+00:00",
+#     "status_id": "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M",
+#     "display_name": "Molly Robinson",
+#     "custom": {
+#         "1. End Date": "2026-11-07",
+#         "1. Price": 359.88,
+#         "1. Product": "Asset Protection Combined RTI and Finance GAP",
+#         "1. Start Date": "2023-11-08",
+#         "ClaimsGurus Customer ID": "1699987991907x153592285691448000",
+#         "Engine Size": "998",
+#         "Financed?": "False",
+#         "First Registered Date": "2018-08-31T19:00:00+00:00",
+#         "Make/Model": "HYUNDAI I10 SE SEPetrol",
+#         "Mileage": 69089,
+#         "Vehicle - Price": 6495,
+#         "VRM": "EO68DYV",
+#     },
+# }
+# resp = api.post("lead", data=data)
+# print(resp)

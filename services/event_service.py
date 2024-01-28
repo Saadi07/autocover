@@ -9,6 +9,7 @@ from utils.utils import (
     save_or_send_pdf,
     send_data_to_closeio,
     get_contract_count_from_bubble,
+    create_contact,
 )
 from config.logger import logger
 from jinja2 import Environment, FileSystemLoader
@@ -73,23 +74,19 @@ def chargebee_payment_success_service(chargebee_event):
                 data_type="Merchant", merchant_name=brokering_for
             )
             if merchant_id:
-                logger.info(f"found merchant id: {merchant_id}")
+                print(f"found merchant id from bubble: {merchant_id}")
+                logger.info(f"found merchant id from bubble: {merchant_id}")
+
+            # if brokering_for == "Jigsaw Finance":
+            #     merchant_id = "1694197230597x897747846563364900"
+            # elif brokering_for == "Kandoo":
+            #     merchant_id = "1698764936036x648723526821609500"
+            # print("merchant_id from if elif: ", merchant_id)
             associated_insurance_product = [product["_id"]]
-            associated_merchant = merchant_id
-            print("associated_merchant", associated_merchant)
+            # associated_merchant = merchant_id
+
             data_to_be_updated = {
-                "Associated Merchants": [
-                    "1698764936036x648723526821609500",
-                    "1704910498263x918957411762176000",
-                    "1704911158504x387824209589698560",
-                    "1704911205052x327579426608906240",
-                    "1704911288172x528506583654858750",
-                    "1704911354669x666828151602544600",
-                    "1704911438137x190060258507096060",
-                    "1704973868071x923211365734154200",
-                    "1704973932535x571884127175049200",
-                    "1705911756843x142013061321457660",
-                ],
+                "Associated Merchants": [merchant_id],
                 "Associated Merchant Group": [
                     "1694182693471x292524019912540160"
                 ],
@@ -131,7 +128,7 @@ def chargebee_payment_success_service(chargebee_event):
             chargebee_data=chargebee_event,
             cust_id=cust_id,
             associated_insurance_product=associated_insurance_product,
-            associated_merchant=associated_merchant,
+            associated_merchant=merchant_id,
         )
 
         if vehicle_data:
@@ -150,9 +147,11 @@ def chargebee_payment_success_service(chargebee_event):
             )
 
         contract_info = {}
-        print("I CAM HERE")
+        print("I CAME HERE")
         contract_info = map_contract_data(
-            vehicle_info=vehicle_info, chargebee_event=chargebee_event
+            vehicle_info=vehicle_info,
+            chargebee_event=chargebee_event,
+            product=product,
         )
 
         contract_info["Merchant Name"] = brokering_for
@@ -172,18 +171,6 @@ def chargebee_payment_success_service(chargebee_event):
         contract_info["Final Total Associated Costs"] = (
             product["Merchant Commission Value"] + sold_price
         )
-        contract_info["Final Merchant Tax Amount"] = 0
-        contract_info["Final Merchant Wholesale Tax Rate"] = 0.12
-        contract_info["Final Merchant Wholesale Price"] = 0
-        contract_info["Accelerated Commission Amount"] = product[
-            "Acc. Flow Monthly Instalment Amount"
-        ]
-        contract_info["Accelerated Flow Type"] = product["Acc. Flow Type"]
-        contract_info["Accelerated Number of Instalments"] = product[
-            "Acc. Flow Number of Instalments"
-        ]
-        contract_info["Associated Insurance Product"] = product["_id"]
-        contract_info["Final RRP"] = product["RRP"]
 
         logger.info(f"sending this data in contract bubble: {contract_info}")
         # if product["Variant Claim limit"]:
@@ -230,36 +217,6 @@ def chargebee_payment_success_service(chargebee_event):
             ] = "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"
             close_io_data["display_name"] = customer_data["Full Name"]
 
-            # close_io_data["contacts"] = [
-            #     {
-            #         "title": "",
-            #         "created_by": cust_id,
-            #         "integration_links": [],
-            #         "date_created": iso8601_date_created,
-            #         "updated_by": "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9",
-            #         "id": "cont_NpVbYEpAm4YTY5MTijtJwngr46veH08QH51eneov8jt",
-            #         "organization_id": "orga_0QdcIMs4HgBx0AcniOlmY7Ju0pCVvCLAw3O7wwnRvTi",
-            #         "name": customer_data["Full Name"],
-            #         "date_updated": "2024-01-01T08:02:16.112000+00:00",
-            #         "lead_id": "lead_cinQ7TktJYK2Nzp2uCHC6Pe1t8lO3B7VhX0Cqnc7Y1Y",
-            #         "display_name": customer_data["Full Name"],
-            #         "urls": [],
-            #         "emails": [
-            #             {"type": "direct", "email": "myaeccleston@yahoo.co.uk"}
-            #         ],
-            #         "phones": [
-            #             {
-            #                 "type": "direct",
-            #                 "phone": "+447970222341",
-            #                 "phone_formatted": "+44 7970 222341",
-            #                 "country": "GB",
-            #             }
-            #         ],
-            #         "first_name": "Mya",
-            #         "last_name": "Eccleston",
-            #     }
-            # ]
-
             date_from_timestamp = datetime.utcfromtimestamp(
                 chargebee_event["content"]["invoice"]["line_items"][0][
                     "date_from"
@@ -299,8 +256,33 @@ def chargebee_payment_success_service(chargebee_event):
                 "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
             }
             # print("to send to close: ", close_io_data)
-            resp = send_data_to_closeio(data=close_io_data)
-            logger.info(f"sending data to close, close response {resp}")
+            lead_response = send_data_to_closeio(data=close_io_data)
+            logger.info(
+                f"sending data to close, close response {lead_response}"
+            )
+
+            contact_data = {
+                "lead_id": lead_response["id"],
+                "name": customer_data["Full Name"],
+                "title": "President",
+                "country": chargebee_event["content"]["customer"][
+                    "billing_address"
+                ]["country"],
+                "phones": [
+                    {
+                        "phone": customer_data["Phone Number 2"],
+                        "type": "mobile",
+                    }
+                ],
+                "emails": [
+                    {"email": customer_data["email"], "type": "office"}
+                ],
+                "urls": [{"url": "http://twitter.com/google/", "type": "url"}],
+                "custom.cf_j0P7kHmgFTZZnYBFtyPSZ3uQw4dpW8xKcW7Krps8atj": "Account Executive",
+            }
+
+            contact_created = create_contact(data=contact_data)
+            logger.info(f"contact response: {contact_created}")
 
             status_code = save_or_send_pdf(
                 rendered_html, to_email=customer_data["email"]
@@ -419,7 +401,7 @@ def map_vehicle_data(
     return vehicle_info
 
 
-def map_contract_data(chargebee_event, vehicle_info):
+def map_contract_data(chargebee_event, vehicle_info, product):
     print(chargebee_event)
     print("I WAS HERE INSIDE CONTRACT")
     fund = (
@@ -469,13 +451,25 @@ def map_contract_data(chargebee_event, vehicle_info):
         "Policy Start Date": iso8601_date_from,
         "static_vehicle_mileage": subscription_content["cf_Vehicle Mileage"],
         "static_vehicle_vrm": vrm,
+        "Accelerated Commission Amount": product[
+            "Acc. Flow Monthly Instalment Amount"
+        ],
+        "Accelerated Flow Type": product["Acc. Flow Type"],
+        "Accelerated Number of Instalments": product[
+            "Acc. Flow Number of Instalments"
+        ],
+        "Associated Insurance Product": product["_id"],
+        "Final RRP": product["RRP"],
         "Monthly Product": "No",
         "Contract Status": "Live",
         "Associated Sales Reps": ["1639925052421x587860159738907000"],
         "Final Insurer 1 Underwriting Price": 100,  # dummy value
         "Final Other Merchant Costs": 100,
-        "Final Regional Manager Profit": 100
+        "Final Regional Manager Profit": 100,
+        "Final Merchant Tax Amount": 0,
+        "Final Merchant Wholesale Tax Rate": 0.12,
+        "Final Merchant Wholesale Price": 0
         # "Contract": "PDF",
     }
-    print(contract_info)
+    # print(contract_info)
     return contract_info
