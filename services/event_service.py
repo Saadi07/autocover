@@ -270,7 +270,9 @@ def chargebee_payment_success_service(chargebee_event):
                 ]["country"],
                 "phones": [
                     {
-                        "phone": customer_data["Phone Number 2"],
+                        "phone": chargebee_event["content"]["customer"][
+                            "phone"
+                        ],
                         "type": "mobile",
                     }
                 ],
