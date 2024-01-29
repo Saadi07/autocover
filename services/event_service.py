@@ -135,15 +135,24 @@ def chargebee_payment_success_service(chargebee_event):
             try:
                 logger.info(f"vehicledata: {vehicle_data}")
                 vehicle_id = send_to_bubble(vehicle_data, data_type="Vehicle")
+                if vehicle_id:
+                    update_bubble(cust_id=cust_id,payload={"Associated Vehicle":[vehicle_id]},data_type="User")
             except Exception as e:
                 logger.error(f"An unexpected error occurred: {e}")
             logger.info(f"vehicle Data send to bubble for {vehicle_id}")
+            fund = (
+                    chargebee_event["content"]["invoice"]["total"]
+                    - chargebee_event["content"]["invoice"]["amount_paid"]
+            )
+            funded = False if fund == 0 else True
 
             rendered_html = template.render(
                 title="Auto Cover",
                 customer_data=customer_data,
                 vehicle_data=vehicle_data,
                 product_data=product,
+                funded=funded
+
             )
 
         contract_info = {}
@@ -202,9 +211,12 @@ def chargebee_payment_success_service(chargebee_event):
             close_io_data["id"] = (cust_id, "")
             close_io_data["name"] = customer_data["Full Name"]
             close_io_data["tasks"] = []
-            close_io_data[
-                "url"
-            ] = "https://claims-gurus.co.uk/version-test/admin_customer_detail/1699987991907x153592285691448000?"
+            base_url = "https://claims-gurus.co.uk/admin_customer_detail/"
+
+            # Appending the variable to the base_url
+            base_url += cust_id
+
+            close_io_data["url"] = base_url
             date_updated_timestamp = datetime.utcfromtimestamp(
                 chargebee_event["content"]["invoice"]["updated_at"]
             )
@@ -244,7 +256,7 @@ def chargebee_payment_success_service(chargebee_event):
                 ][0]["amount"],
                 "1. Product": product["Variant Name"],
                 "1. Start Date": iso8601_date_from,
-                "ClaimsGurus Customer ID": "1699987991907x153592285691448000",
+                "ClaimsGurus Customer ID": cust_id,
                 "Engine Size": vehicle_data["Engine capacity *"],
                 "Financed?": funded,
                 "First Registered Date": vehicle_data["First registered *"],

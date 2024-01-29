@@ -258,10 +258,11 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
     )
 
     if send_email:
+        print("Sending email...")
         # Set your SendGrid API key
         # sendgrid_api_key = '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'
         sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
-
+        print(SENDGRID_API_KEY)
         # Set sender and recipient email addresses
         # from_email = "admin@claims-gurus.co.uk"
         # to_email = to_email or "marriam.siddiqui@gmail.com"
@@ -276,8 +277,10 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             subject="AutoCover Contract",
             html_content="Please find the attached PDF.",
         )
+        print("about to send email")
 
         with open("output.pdf", "rb") as f:
+            print("about to send email")
             data = f.read()
             encoded_data = base64.b64encode(data).decode()
 
@@ -298,6 +301,7 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         # logger.info(f"about to send email")
         print("about to send email")
         try:
+            print("about to send email in try")
             # response = sg.send(message)
             response = sg.client.mail.send.post(request_body=message.get())
             logger.info(
