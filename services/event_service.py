@@ -136,23 +136,85 @@ def chargebee_payment_success_service(chargebee_event):
                 logger.info(f"vehicledata: {vehicle_data}")
                 vehicle_id = send_to_bubble(vehicle_data, data_type="Vehicle")
                 if vehicle_id:
-                    update_bubble(cust_id=cust_id,payload={"Associated Vehicle":[vehicle_id]},data_type="User")
+                    update_bubble(
+                        cust_id=cust_id,
+                        payload={"Associated Vehicle": [vehicle_id]},
+                        data_type="User",
+                    )
             except Exception as e:
                 logger.error(f"An unexpected error occurred: {e}")
             logger.info(f"vehicle Data send to bubble for {vehicle_id}")
+
+            address = (
+                customer_data["Line 1: Address"]
+                + customer_data["Line 2: Address"]
+                + customer_data["Line 3: Address"]
+                + customer_data["Line 4: Address"]
+            )
             fund = (
-                    chargebee_event["content"]["invoice"]["total"]
-                    - chargebee_event["content"]["invoice"]["amount_paid"]
+                chargebee_event["content"]["invoice"]["total"]
+                - chargebee_event["content"]["invoice"]["amount_paid"]
             )
             funded = False if fund == 0 else True
+
+            today_date = datetime.now()
+            formatted_date = today_date.strftime("%d/%m/%Y")
+
+            date_from_timestamp = datetime.utcfromtimestamp(
+                chargebee_event["content"]["invoice"]["line_items"][0][
+                    "date_from"
+                ]
+            )
+            iso8601_date_from = date_from_timestamp.strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
+            formatted_from_date = date_from_timestamp.strftime("%d/%m/%Y")
+            date_to_timestamp = datetime.utcfromtimestamp(
+                chargebee_event["content"]["invoice"]["line_items"][0][
+                    "date_to"
+                ]
+            )
+            iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+            formatted_to_date = date_to_timestamp.strftime("%d/%m/%Y")
+            fund = (
+                chargebee_event["content"]["invoice"]["total"]
+                - chargebee_event["content"]["invoice"]["amount_paid"]
+            )
+            contract_count = get_contract_count_from_bubble()
+            reference = str(contract_count + 1)
+            sales_rep = chargebee_event["content"]["subscription"][
+                "cf_Sales Agent"
+            ]
+            aspiration = vehicle_info["Response"]["DataItems"][
+                "TechnicalDetails"
+            ]["General"]["Engine"]["Aspiration"]
+            if aspiration == "Turbocharged":
+                turbocharged = "Yes"
+            else:
+                turbocharged = "No"
+
+            DrivingAxle = vehicle_info["Response"]["DataItems"][
+                "TechnicalDetails"
+            ]["General"]["DrivingAxle"]
+            if DrivingAxle == "4WD":
+                four_wheel_drive = "Yes"
+            else:
+                four_wheel_drive = "No"
 
             rendered_html = template.render(
                 title="Auto Cover",
                 customer_data=customer_data,
                 vehicle_data=vehicle_data,
                 product_data=product,
-                funded=funded
-
+                funded=funded,
+                formatted_date=formatted_date,
+                formatted_from_date=formatted_from_date,
+                formatted_to_date=formatted_to_date,
+                reference=reference,
+                sales_rep=sales_rep,
+                turbocharged=turbocharged,
+                four_wheel_drive=four_wheel_drive,
+                address=address,
             )
 
         contract_info = {}
