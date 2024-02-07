@@ -7,10 +7,14 @@ from config.configuration import (
     VEHICLE_DATA_API_KEY,
     VEHICLE_DATAPACKAGE,
     CLOSEIO_KEY,
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_REGION_NAME,
 )
 
 from config.logger import logger
 import requests
+import boto3
 import json
 from jinja2 import Undefined
 import os
@@ -246,7 +250,14 @@ def calculate_tax(
     return output, rate
 
 
-def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
+def save_or_send_pdf(
+    rendered_html,
+    service_invoice_rendered_html,
+    invoice_rendered_html,
+    cust_id,
+    send_email=True,
+    to_email=None,
+):
     # contract file
     html_file_path = "output.html"
     with open(html_file_path, "w") as f:
@@ -256,7 +267,6 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
     converter.convert(
         f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
     )
-    import boto3
 
     # save to s3
     s3 = boto3.client(
@@ -265,19 +275,20 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         region_name=AWS_REGION_NAME,
     )
-    file_name = "output.pdg"
+    lst_pdf_files = ["output.pdf", "invoice.pdf", "service_invoice.pdf"]
+    # file_name = "output.pdf"
     bucket_name = "bubble-bucket-0001"
-    s3_key = f"DUMMY_DATA/{file_name}"
-
-    try:
-        s3.upload_file(file_name, bucket_name, s3_key)
-        print("File uploaded successfully to S3")
-    except Exception as e:
-        print("Error uploading file to S3:", e)
+    for file_name in lst_pdf_files:
+        s3_key = f"{cust_id}/{file_name}"
+        try:
+            s3.upload_file(file_name, bucket_name, s3_key)
+            print(f"File uploaded successfully to S3: {cust_id}/{file_name}")
+        except Exception as e:
+            print("Error uploading file to S3:", e)
     # service invoice
     si_html_file_path = "service_invoice.html"
     with open(si_html_file_path, "w") as f:
-        f.write(rendered_html)
+        f.write(service_invoice_rendered_html)
 
     path = os.path.abspath("service_invoice.html")
     converter.convert(
@@ -287,7 +298,7 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
     # invoice
     invoice_html_file_path = "invoice.html"
     with open(invoice_html_file_path, "w") as f:
-        f.write(rendered_html)
+        f.write(invoice_rendered_html)
 
     path = os.path.abspath("invoice.html")
     converter.convert(
@@ -316,23 +327,24 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
         )
         print("about to send email")
 
-        with open("output.pdf", "rb") as f:
-            print("about to send email")
-            data = f.read()
-            encoded_data = base64.b64encode(data).decode()
+        # creating list for sending all 3 in email
+        lst_attachments = []
 
-            #     attachment = Attachment()
-            #     attachment.file_content = encoded_data
-            #     attachment.file_type = "application/pdf"
-            #     attachment.file_name = "output.pdf"
-            #     attachment.disposition = "attachment"
-            attachedFile = Attachment(
-                FileContent(encoded_data),
-                FileName("output.pdf"),
-                FileType("application/pdf"),
-                Disposition("attachment"),
-            )
-            message.attachment = attachedFile
+        for file_path in lst_pdf_files:
+            with open(file_path, "rb") as f:
+                print(f"Processing file: {file_path}")
+                data = f.read()
+                encoded_data = base64.b64encode(data).decode()
+                attachedFile = Attachment(
+                    FileContent(encoded_data),
+                    FileName(file_path.split("/")[-1]),
+                    FileType("application/pdf"),
+                    Disposition("attachment"),
+                )
+                # message.attachment = attachedFile
+                lst_attachments.append(attachedFile)
+
+        message.attachment = lst_attachments
 
         # Send the email
         # logger.info(f"about to send email")
@@ -351,7 +363,10 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
             logger.info(
                 f"Email sent successfully. Status code: {response.status_code}"
             )
-            return response.status_code
+            return {
+                "status_code": response.status_code,
+                "contract_s3_link": f"https://bubble-bucket-0001.s3.eu-west-2.amazonaws.com/{cust_id}/output.pdf",
+            }
         except Exception as e:
             print("error in sendgrid: ", e)
             logger.info(f"Error sending email: {str(e)}")
@@ -381,7 +396,6 @@ def get_contract_count_from_bubble():
         # print("contract response:", response)
         first_count = response.json().get("response", {}).get("count")
         remaining = response.json().get("response", {}).get("remaining")
-        print(first_count + remaining)
         return first_count + remaining
     else:
         print(f"Error: {response.status_code}")
