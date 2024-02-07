@@ -223,7 +223,7 @@ def chargebee_payment_success_service(chargebee_event):
 
             service_invoice_data = map_invoice_data(
                 chargebee_event=chargebee_event,
-                product_data=product,
+                product=product,
                 rate=rate,
             )
             invoice_rendered_html = invoice_template.render(
@@ -579,9 +579,10 @@ def map_invoice_data(chargebee_event, product, rate):
     )
     iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     amount = product["Acc. Flow Monthly Instalment Amount"]
+    payment_terms = product["Acc. Flow Number of Instalments"]
+
     sub_total = amount * payment_terms
     total_amount = sub_total + (sub_total * rate)
-    payment_terms = product["Acc. Flow Number of Instalments"]
 
     payment_schedule_list = []
 
