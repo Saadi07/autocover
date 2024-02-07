@@ -247,7 +247,7 @@ def calculate_tax(
 
 
 def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
-    # Save HTML to a file
+    # contract file
     html_file_path = "output.html"
     with open(html_file_path, "w") as f:
         f.write(rendered_html)
@@ -255,6 +255,43 @@ def save_or_send_pdf(rendered_html, send_email=True, to_email=None):
     path = os.path.abspath("output.html")
     converter.convert(
         f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
+    )
+    import boto3
+
+    # save to s3
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_REGION_NAME,
+    )
+    file_name = "output.pdg"
+    bucket_name = "bubble-bucket-0001"
+    s3_key = f"DUMMY_DATA/{file_name}"
+
+    try:
+        s3.upload_file(file_name, bucket_name, s3_key)
+        print("File uploaded successfully to S3")
+    except Exception as e:
+        print("Error uploading file to S3:", e)
+    # service invoice
+    si_html_file_path = "service_invoice.html"
+    with open(si_html_file_path, "w") as f:
+        f.write(rendered_html)
+
+    path = os.path.abspath("service_invoice.html")
+    converter.convert(
+        f"file:///{path}", "service_invoice.pdf", print_options={"scale": 0.5}
+    )
+
+    # invoice
+    invoice_html_file_path = "invoice.html"
+    with open(invoice_html_file_path, "w") as f:
+        f.write(rendered_html)
+
+    path = os.path.abspath("invoice.html")
+    converter.convert(
+        f"file:///{path}", "invoice.pdf", print_options={"scale": 0.5}
     )
 
     if send_email:

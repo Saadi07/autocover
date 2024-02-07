@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -125,159 +126,168 @@
         }
     </style>
 </head>
-<body>
-<div class="mainBody">
-    <div style="margin-top: 40px" class="mainContainer">
-        <div class="company">
-            <div class="companybilling">
-                <div>
-                    <h1 style="color: #170B38">AutoCover</h1>
-                    <p>
-                        DS XL ||| 12 UK Ltd.
-                    </p>
-                    <p>
-                        30 Applegarth Road,
-                    </p>
-                    <p>
-                        London, England, W140HY
-                    </p>
 
-                </div>
-                <div>
-                    <p>Bill To</p>
-                    <h2 style="color: #170B38">
-                        Jack Little
-                    </h2>
-                    <p>
-                        Address Line 1
-                    </p>
-                    <p>
-                        Address Line 2
-                    </p>
+<body>
+    <div class="mainBody">
+        <div style="margin-top: 40px" class="mainContainer">
+            <div class="company">
+                <div class="companybilling">
+                    <div>
+                        <h1 style="color: #170B38">AutoCover</h1>
+                        <p>
+                            DS XL ||| 12 UK Ltd.
+                        </p>
+                        <p>
+                            30 Applegarth Road,
+                        </p>
+                        <p>
+                            London, England, W140HY
+                        </p>
+
+                    </div>
+                    <div>
+                        <p>Bill To</p>
+                        <h2 style="color: #170B38">
+                            {{data["Full Name"]}}
+                        </h2>
+                        <p>
+                            {{data["Line 1: Address"]}}
+                        </p>
+                        <p>
+                            {{data["Line 2: Address"]}}
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="invoice">
-            <h1 style="color: #170B38">
-                Payment <br/> Schedule
-            </h1>
-            <strong># INV-000001</strong>
-        </div>
-
-    </div>
-    <div class="paymentSection">
-        <div class="payment">
-            <strong>Invoice Date:</strong>
-            <p>01/01/2022</p>
+            <div class="invoice">
+                <h1 style="color: #170B38">
+                    Payment <br /> Schedule
+                </h1>
+                <strong># INV-{{data['invoice_number']}}</strong>
+            </div>
 
         </div>
-        <div class="payment">
-            <strong>Payment Terms:</strong>
-            <p>01/01/2022</p>
+        <div class="paymentSection">
+            <div class="payment">
+                <strong>Invoice Date:</strong>
+                <p>{{data["invoice_date"]}}</p>
+
+            </div>
+            <div class="payment">
+                <strong>Payment Terms:</strong>
+                <p>{{data["payment_terms"]}}</p>
+            </div>
         </div>
-    </div>
-    <table class="table">
-        <thead class="tableHead">
-        <tr class="tableRow">
-            <th>
-                Item & Description
-            </th>
-            <th>
-                Amount
-            </th>
+        <table class="table">
+            <thead class="tableHead">
+                <tr class="tableRow">
+                    <th>
+                        Item & Description
+                    </th>
+                    <th>
+                        Amount
+                    </th>
 
-        </tr>
-        </thead>
-        <tbody>
-        <tr class="tableRow2">
-            <td>
-                Product Type - Variant Name - Varient Term
-            </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="tableRow2">
+                    <td>
+                        {{data["product_type"]}} - {{data["variant_name"]}} - {{data["variant_term"]}}
+                    </td>
 
-            <td>
-                £0.00
-            </td>
-        </tr>
-        <tr class="tableRow2">
-            <td>
-                Service Fee
-            </td>
+                    <td>
+                        {{data['total_amount']}}
+                    </td>
+                </tr>
+                <tr class="tableRow2">
+                    <td>
+                        Service Fee
+                    </td>
 
-            <td>
-                £0.00
-            </td>
-        </tr>
-        <tr class="tableRow2">
-            <td>
-                Admin Fee
-            </td>
+                    <td>
+                        £0.00
+                    </td>
+                </tr>
+                <tr class="tableRow2">
+                    <td>
+                        Admin Fee
+                    </td>
 
-            <td>
-                £0.00
-            </td>
-        </tr>
-        </tbody>
+                    <td>
+                        £0.00
+                    </td>
+                </tr>
+            </tbody>
 
-    </table>
-    <div class="totalSection">
-        <div class="subTotalSection">
+        </table>
+        <div class="totalSection">
+            <div class="subTotalSection">
+                <p>
+                    Sub Total
+                </p>
+                <p>
+                    {{data["sub_total"]}}
+                </p>
+            </div>
+            <div class="subTotalSection">
+                <p>
+                    Tax Rate
+                </p>
+                <p>
+                    {{data["rate"]}}
+                </p>
+            </div>
+            <div class="subTotalSection">
+                <strong>
+                    Total
+                </strong>
+                <strong>
+                    {{data["total_amount"]}}
+                </strong>
+            </div>
+            <div class="subTotalBalanceSection">
+                <strong>
+                    Balance Due
+                </strong>
+                <strong>
+                    {{data["balance_due"]}}
+                </strong>
+            </div>
+        </div>
+        <div>
+            <strong>Notes</strong>
             <p>
-                Sub Total
-            </p>
-            <p>
-
-            </p>
-        </div>
-        <div class="subTotalSection">
-            <p>
-                Tax Rate
-            </p>
-            <p>
-                Tax Rate Here
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex
+                ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                fugiat
+                nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                mollit
+                anim id est laborum.
             </p>
         </div>
-        <div class="subTotalSection">
-            <strong>
-                Total
-            </strong>
-            <strong>
-                Tax Rate Here
-            </strong>
+        <div>
+            <strong>Terms and Conditions</strong>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex
+                ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                fugiat
+                nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                mollit
+                anim id est laborum.
+            </p>
         </div>
-        <div class="subTotalBalanceSection">
-            <strong>
-                Balance Due
-            </strong>
-            <strong>
-                Tax Rate Here
-            </strong>
+        <div class="poweredBy">
+            <strong>Powered By</strong>
+            <p>
+                AutoCover
+            </p>
         </div>
     </div>
-    <div>
-        <strong>Notes</strong>
-        <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-            ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-            nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-            anim id est laborum.
-        </p>
-    </div><div>
-        <strong>Terms and Conditions</strong>
-        <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-            ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-            nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-            anim id est laborum.
-        </p>
-    </div>
-    <div class="poweredBy">
-        <strong>Powered By</strong>
-        <p>
-            AutoCover
-        </p>
-    </div>
-</div>
 </body>
+
 </html>

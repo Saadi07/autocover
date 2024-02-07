@@ -13,13 +13,17 @@ from utils.utils import (
 )
 from config.logger import logger
 from jinja2 import Environment, FileSystemLoader
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # TEMPLATE_FILE_PATH = "/home/saadi09/Documents/InsightHub Projects/AUTOCOVER/templates"
 TEMPLATE_FILE_PATH = r"templates"
 
 template_env = Environment(loader=FileSystemLoader(TEMPLATE_FILE_PATH))
 template = template_env.get_template("SCOTT JONES Contract.html")
+invoice_template = template_env.get_template("Invoice Template.html")
+service_invoice_data = template_env.get_template(
+    "Service Invoice Template.html"
+)
 
 
 def find_matching_product(
@@ -217,6 +221,19 @@ def chargebee_payment_success_service(chargebee_event):
                 address=address,
             )
 
+            service_invoice_data = map_invoice_data(
+                chargebee_event=chargebee_event,
+                product_data=product,
+                rate=rate,
+            )
+            invoice_rendered_html = invoice_template.render(
+                data=service_invoice_data
+            )
+
+            service_invoice_rendered_html = service_invoice_data.render(
+                data=service_invoice_data
+            )
+
         contract_info = {}
         print("I CAME HERE")
         contract_info = map_contract_data(
@@ -256,9 +273,9 @@ def chargebee_payment_success_service(chargebee_event):
             close_io_data = {}
             close_io_data["status_label"] = "Customer"
             close_io_data["opportunities"] = []
-            close_io_data[
-                "html_url"
-            ] = "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/"
+            close_io_data["html_url"] = (
+                "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/"
+            )
             close_io_data["description"] = ""
             date_created_timestamp = datetime.utcfromtimestamp(
                 chargebee_event["content"]["subscription"]["created_at"]
@@ -267,9 +284,9 @@ def chargebee_payment_success_service(chargebee_event):
                 "%Y-%m-%dT%H:%M:%SZ"
             )
             close_io_data["date_created"] = iso8601_date_created
-            close_io_data[
-                "updated_by"
-            ] = "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9"
+            close_io_data["updated_by"] = (
+                "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9"
+            )
             close_io_data["id"] = (cust_id, "")
             close_io_data["name"] = customer_data["Full Name"]
             close_io_data["tasks"] = []
@@ -286,9 +303,9 @@ def chargebee_payment_success_service(chargebee_event):
                 "%Y-%m-%dT%H:%M:%SZ"
             )
             close_io_data["date_updated"] = iso8601_date_updated
-            close_io_data[
-                "status_id"
-            ] = "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"
+            close_io_data["status_id"] = (
+                "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"
+            )
             close_io_data["display_name"] = customer_data["Full Name"]
 
             date_from_timestamp = datetime.utcfromtimestamp(
@@ -452,14 +469,6 @@ def map_vehicle_data(
         "Fuel Type": smmt_details["FuelType"],
         "First registered *": registration_details["DateFirstRegistered"],
         "Vehicle Type": smmt_details["BodyStyle"],
-        # "Drive Type": smmt_details["DriveType"],
-        # "Is the vehicle turbo charged? *": "Yes"
-        # if technical_details["General"]["Engine"]["Aspiration"]
-        # == "Turbocharged"
-        # else "No",
-        # "Catalytic Converter": "Yes"
-        # if technical_details["General"]["Engine"]["FuelCatalyst"] == "C"
-        # else "No",
         "VRN": subscription_content[
             "cf_Vehicle Registration Number (Licence Plate)*"
         ],
@@ -544,8 +553,67 @@ def map_contract_data(chargebee_event, vehicle_info, product):
         "Final Regional Manager Profit": 100,
         "Final Merchant Tax Amount": 0,
         "Final Merchant Wholesale Tax Rate": 0.12,
-        "Final Merchant Wholesale Price": 0
+        "Final Merchant Wholesale Price": 0,
         # "Contract": "PDF",
     }
     # print(contract_info)
     return contract_info
+
+
+def map_invoice_data(chargebee_event, product, rate):
+    invoice_number = chargebee_event["content"]["invoice"]["id"]
+    invoice_date_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["invoice"]["generated_at"]
+    )
+    iso8601_invoice_date = invoice_date_timestamp.strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    formatted_invoice_date = iso8601_invoice_date.strftime("%d/%m/%Y")
+    billing_address = chargebee_event["content"]["customer"]["billing_address"]
+    customer = chargebee_event["content"]["customer"]
+    full_name = f"{customer['first_name']} {customer['last_name']}"
+    line1 = billing_address.get("line1", "")
+    line2 = billing_address.get("line2", "")
+    date_from_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
+    )
+    iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+    amount = product["Acc. Flow Monthly Instalment Amount"]
+    sub_total = amount * payment_terms
+    total_amount = sub_total + (sub_total * rate)
+    payment_terms = product["Acc. Flow Number of Instalments"]
+
+    payment_schedule_list = []
+
+    for i in range(1, payment_terms + 1):
+        current_date = iso8601_date_from + timedelta(days=(i - 1) * 30)
+        formatted_date = current_date.strftime("%d/%m/%Y")
+
+        # Create the payment_schedule string
+        payment_schedule = f"Payment ({i} of {payment_terms})"
+
+        # Create the dictionary for the current iteration and append it to the list
+        payment_schedule_list.append(
+            {
+                "payment_schedule": payment_schedule,
+                "date": formatted_date,
+                "amount": amount,
+            }
+        )
+
+    return {
+        "Full Name": full_name,
+        "Line 1: Address": line1,
+        "Line 2: Address": line2,
+        "invoice_number": invoice_number,
+        "invoice_date": formatted_invoice_date,
+        "payment_terms": payment_terms,
+        "payment_schedule_list": payment_schedule_list,
+        "sub_total": sub_total,
+        "rate": rate,
+        "total_amount": total_amount,
+        "balance_due": total_amount - amount,
+        "product_type": product["Product Type "],
+        "variant_name": product["Variant Name"],
+        "variant_term": product["Variant Term"],
+    }
