@@ -128,6 +128,7 @@
 </head>
 
 <body>
+    {% set pound_entity = "&#163;" %}
     <div class="mainBody">
         <div style="margin-top: 40px" class="mainContainer">
             <div class="company">
@@ -206,7 +207,7 @@
                     </td>
 
                     <td>
-                        £0.00
+                        {{ pound_entity|safe }}0.00
                     </td>
                 </tr>
                 <tr class="tableRow2">
@@ -215,7 +216,7 @@
                     </td>
 
                     <td>
-                        £0.00
+                        {{ pound_entity|safe }}0.00
                     </td>
                 </tr>
             </tbody>
@@ -227,7 +228,7 @@
                     Sub Total
                 </p>
                 <p>
-                    {{data["sub_total"]}}
+                    {{ pound_entity|safe }}{{data["sub_total"]}}
                 </p>
             </div>
             <div class="subTotalSection">
@@ -243,7 +244,7 @@
                     Total
                 </strong>
                 <strong>
-                    {{data["total_amount"]}}
+                    {{ pound_entity|safe }}{{data["total_amount"]}}
                 </strong>
             </div>
             <div class="subTotalBalanceSection">
@@ -251,7 +252,7 @@
                     Balance Due
                 </strong>
                 <strong>
-                    {{data["balance_due"]}}
+                    {{ pound_entity|safe }}{{data["balance_due"]}}
                 </strong>
             </div>
         </div>

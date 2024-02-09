@@ -88,6 +88,20 @@ def get_from_bubble(data_type, limit=100):
     return all_results
 
 
+def find_matching_product(
+    all_records_dict, rate_id_to_match, mileage_to_match
+):
+    # print("charge rate", rate_id_to_match)
+    product = find_matching_record(
+        all_records_dict, rate_id_to_match, mileage_to_match
+    )
+
+    if not product:
+        logger.warning("No matching record found.")
+
+    return product
+
+
 def get_merchant_from_bubble(data_type, merchant_name):
     response = requests.get(
         f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS

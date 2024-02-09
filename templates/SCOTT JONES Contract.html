@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{{customer_data['Full Name']}} Contract</title>
+    <title>{{data['Full Name']}} Contract</title>
 
     <style>
         body {
@@ -116,9 +116,10 @@
 </head>
 
 <body style="background: #F0F0F0">
+    {% set pound_entity = "&#163;" %}
     <div id="headerSection">
         <h1 style="font-size: 50px;font-weight: bolder">
-            {{customer_data['Full Name']}} Contract
+            {{data['Full Name']}} Contract
         </h1>
         <img src="https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2Fb50a64adbea2f4906089b6281c21f1c4.cdn.bubble.io%2Ff1686323407828x745880602792397700%2FAutoCover%2520Logo%2520dark%2520blue%25204.png?w=512&h=71&auto=compress&fit=crop"
             width="356px" height="48px">
@@ -136,14 +137,14 @@
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Full Name: </strong>
-                <p style="font-size: 15px">{{customer_data['Full Name']}}</p>
+                <p style="font-size: 15px">{{data['Full Name']}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
 
                 <strong style="font-size: 16px">
                     Address:
                 </strong>
-                <p style="font-size: 15px">{{address}}</p>
+                <p style="font-size: 15px">{{data['address']}}</p>
 
             </div>
         </div>
@@ -153,7 +154,7 @@
                 <strong style="font-size: 16px">
                     Phone Number:
                 </strong>
-                <p style="font-size: 15px">{{customer_data['Phone Number 2'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Phone Number 2'] | default("Not specified")}}</p>
 
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
@@ -161,7 +162,7 @@
                 <strong style="font-size: 16px">
                     Email:
                 </strong>
-                <p style="font-size: 15px">{{customer_data['email']}}</p>
+                <p style="font-size: 15px">{{data['email']}}</p>
 
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
@@ -185,63 +186,64 @@
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     VRN: </strong>
-                <p style="font-size: 15px">{{vehicle_data['VRN'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['VRN'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     VIN: </strong>
-                <p style="font-size: 15px">{{vehicle_data['VIN number'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['VIN number'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Delivery Date: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Delivery date'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Delivery date'] | default("Not specified")}}</p>
             </div>
         </div>
         <div id="vrnSection" style="width: 60%">
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Make: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Make'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Make'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Engine Capacity: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Engine capacity *'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Engine capacity *'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Price Paid: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Vehicle price *'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{ pound_entity|safe }}{{data['Vehicle price *'] | default("Not specified")}}
+                </p>
             </div>
         </div>
         <div id="vrnSection" style="width: 60%">
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Model: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Vehicle price *']}}</p>
+                <p style="font-size: 15px">{{data['Model']}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     First Registered: </strong>
-                <p style="font-size: 15px">{{vehicle_data['First registered *'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['First registered *'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Dealer: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Dealer bought from'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Dealer'] | default("Not specified")}}</p>
             </div>
         </div>
         <div id="vrnSectionBelow" style="width: 35%">
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Mileage: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Annual mileage'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Annual mileage'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Vehicle Type: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Vehicle Type'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Vehicle Type'] | default("Not specified")}}</p>
             </div>
         </div>
         <!-- Additional fields -->
@@ -254,17 +256,17 @@
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Is New Vehicle: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Sale Type'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Sale Type'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Is Imported: </strong>
-                <p style="font-size: 15px">{{vehicle_data['Is the vehicle imported?'] | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['Is the vehicle imported?'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     Is Turbo Charged Petrol: </strong>
-                <p style="font-size: 15px">{{turbocharged | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['turbocharged'] | default("Not specified")}}</p>
             </div>
         </div>
         <div id="vrnSectionBelow" style="width: 70%;">
@@ -281,7 +283,7 @@
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
                     4 Wheel Drive: </strong>
-                <p style="font-size: 15px">{{four_wheel_drive | default("Not specified")}}</p>
+                <p style="font-size: 15px">{{data['four wheel drive'] | default("Not specified")}}</p>
             </div>
             <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                 <strong style="font-size: 16px">
@@ -305,7 +307,7 @@
                     Product Type
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data['Product Type']}}
+                    {{data['Product Type']}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -313,7 +315,7 @@
                     Variant Name
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data['Variant Name'] | default("Not specified")}}
+                    {{data['Variant Name'] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -321,7 +323,7 @@
                     Variant Term
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data['Variant Term'] | default("Not specified")}}
+                    {{data['Variant Term'] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -329,7 +331,7 @@
                     Claim Limit
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data["Variant Claim limit"] | default("Not specified")}}
+                    {{data["Variant Claim limit"] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -337,7 +339,7 @@
                     Excess
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data['Variant Excess'] | default("Not specified")}}
+                    {{data['Variant Excess'] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -345,21 +347,21 @@
                     Sold Price
                 </strong>
                 <p style="font-size: 15px">
-                    {{product_data['Wholesale Price'] | default("Not specified")}}
+                    {{data['Wholesale Price'] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
                 <strong style="font-size: 16px">
                     Funded </strong>
                 <p style="font-size: 15px">
-                    {{funded | default("Not specified")}}
+                    {{data['funded'] | default("Not specified")}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
                 <strong style="font-size: 16px">
                     Start Date </strong>
                 <p style="font-size: 15px">
-                    {{formatted_from_date}}
+                    {{data['formatted_from_date']}}
                 </p>
             </div>
             <div style="display: flex; flex-direction: column">
@@ -367,7 +369,7 @@
                     End Date
                 </strong>
                 <p style="font-size: 15px">
-                    {{formatted_to_date}}
+                    {{data['formatted_to_date']}}
                 </p>
             </div>
         </div>
@@ -393,22 +395,22 @@
             <div
                 style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
                 <strong style="font-size: 16px">Merchant:</strong>
-                <p style="font-size: 15px">{{vehicle_data["Dealer bought from"]}}</p>
+                <p style="font-size: 15px">{{data["Merchant"]}}</p>
             </div>
             <div
                 style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
                 <strong style="font-size: 16px">Sales Rep:</strong>
-                <p style="font-size: 15px">{{sales_rep}}</p>
+                <p style="font-size: 15px">{{data['sales_rep']}}</p>
             </div>
             <div
                 style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
                 <strong style="font-size: 16px">Issue Date:</strong>
-                <p style="font-size: 15px">{{formatted_from_date}}</p>
+                <p style="font-size: 15px">{{data['formatted_from_date']}}</p>
             </div>
             <div
                 style="display: flex;flex-direction: row; justify-content: space-between;width: 60%; align-items: center ; align-content: center">
                 <strong style="font-size: 16px">Reference Number:</strong>
-                <p style="font-size: 15px">{{reference}}</p>
+                <p style="font-size: 15px">{{data['reference']}}</p>
             </div>
             <strong style="font-size: 14px">AutoCover, 30 Applegarth Road, London, England, W14 0HY</strong>
         </div>
@@ -419,11 +421,11 @@
             <div style="display:flex;justify-content: space-between ;  flex-direction: row">
                 <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                     <strong style="font-size: 15px">Signature:</strong>
-                    <p style="font-size: 14px">{{customer_data['Full Name']}}</p>
+                    <p style="font-size: 14px">{{data['Full Name']}}</p>
                 </div>
                 <div style="display:flex; align-items: center;align-content: center; gap: 20px; flex-direction: row">
                     <strong style="font-size: 15px">Date:</strong>
-                    <p style="font-size: 14px">{{formatted_from_date}}</p>
+                    <p style="font-size: 14px">{{data['formatted_from_date']}}</p>
                 </div>
             </div>
         </div>
