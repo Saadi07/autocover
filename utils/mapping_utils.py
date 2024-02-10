@@ -30,11 +30,11 @@ def map_customer_data(chargebee_event):
 
 
 def map_vehicle_data(
-    vehicle_info,
-    chargebee_data,
-    cust_id,
-    associated_insurance_product,
-    associated_merchant,
+        vehicle_info,
+        chargebee_data,
+        cust_id,
+        associated_insurance_product,
+        associated_merchant,
 ):
     classification_details = vehicle_info["Response"]["DataItems"][
         "ClassificationDetails"
@@ -85,8 +85,8 @@ def map_vehicle_data(
 
 def map_contract_data(chargebee_event, vehicle_info, product):
     fund = (
-        chargebee_event["content"]["invoice"]["total"]
-        - chargebee_event["content"]["invoice"]["amount_paid"]
+            chargebee_event["content"]["invoice"]["total"]
+            - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
@@ -156,21 +156,21 @@ def map_contract_data(chargebee_event, vehicle_info, product):
 
 
 def map_contract_pdf_data(
-    customer_data,
-    vehicle_data,
-    vehicle_info,
-    product_data,
-    chargebee_event,
+        customer_data,
+        vehicle_data,
+        vehicle_info,
+        product_data,
+        chargebee_event,
 ):
     # print("prod", product_data)
 
     contract_count = get_contract_count_from_bubble()
     reference = str(contract_count + 1)
     address = (
-        customer_data["Line 1: Address"]
-        + customer_data["Line 2: Address"]
-        + customer_data["Line 3: Address"]
-        + customer_data["Line 4: Address"]
+            customer_data["Line 1: Address"]
+            + customer_data["Line 2: Address"]
+            + customer_data["Line 3: Address"]
+            + customer_data["Line 4: Address"]
     )
     first_registered_date = vehicle_data["First registered *"]
     first_registered_date = (
@@ -196,8 +196,8 @@ def map_contract_pdf_data(
         four_wheel_drive = "No"
 
     fund = (
-        chargebee_event["content"]["invoice"]["total"]
-        - chargebee_event["content"]["invoice"]["amount_paid"]
+            chargebee_event["content"]["invoice"]["total"]
+            - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
 
@@ -256,9 +256,11 @@ def map_contract_pdf_data(
 
 def map_invoice_data(chargebee_event, product, rate):
     invoice_number = chargebee_event["content"]["invoice"]["id"]
+    # invoice_date = datetime.utcfromtimestamp(
+    #     chargebee_event["content"]["invoice"]["generated_at"]
+    # ).date()
     invoice_date = datetime.utcfromtimestamp(
-        chargebee_event["content"]["invoice"]["generated_at"]
-    ).date()
+        chargebee_event["content"]["invoice"]["generated_at"]).date().strftime("%d/%m/%Y")
     # print("invoice date", invoice_date)
 
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
@@ -273,25 +275,35 @@ def map_invoice_data(chargebee_event, product, rate):
 
     amount = product["Acc. Flow Monthly Instalment Amount"]
     payment_terms = product["Acc. Flow Number of Instalments"]
+    monthly_amount = round(amount + (amount * rate), 2)
+    IPT_Amount = round(product["RRP"] * 0.107202400800267, 2)
+    sub_total = round((amount * payment_terms) - IPT_Amount, 2)
 
-    sub_total = amount * payment_terms
-    total_amount = sub_total + (sub_total * rate)
-
+    # total_amount = sub_total + (sub_total * rate)
+    total_amount = product["RRP"]
     payment_schedule_list = []
 
-    for i in range(1, payment_terms + 1):
-        current_date = date_from_timestamp + timedelta(days=30 * i)
+    payment_schedule_list.append(
+        {
+            "payment_schedule": "Payment (1 of {})".format(payment_terms),
+            "date": date_from_timestamp.strftime("%d/%m/%Y"),
+            "amount": monthly_amount,
+        }
+    )
+    for i in range(1, payment_terms):
+        # Increment month and year, keep the day the same as the first date
+        current_date = date_from_timestamp.replace(month=date_from_timestamp.month + i, year=date_from_timestamp.year)
         formatted_date = current_date.strftime("%d/%m/%Y")
 
         # Create the payment_schedule string
-        payment_schedule = f"Payment ({i} of {payment_terms})"
+        payment_schedule = f"Payment ({i + 1} of {payment_terms})"
 
         # Create the dictionary for the current iteration and append it to the list
         payment_schedule_list.append(
             {
                 "payment_schedule": payment_schedule,
                 "date": formatted_date,
-                "amount": amount,
+                "amount": monthly_amount,
             }
         )
 
@@ -299,12 +311,14 @@ def map_invoice_data(chargebee_event, product, rate):
         "Full Name": full_name,
         "Line 1: Address": line1,
         "Line 2: Address": line2,
+        # "monthly_amount": monthly_amount,
         "invoice_number": invoice_number,
         "invoice_date": invoice_date,
         "payment_terms": payment_terms,
         "payment_schedule_list": payment_schedule_list,
         "sub_total": sub_total,
         "rate": rate,
+        "IPT_Amount": IPT_Amount,
         "total_amount": total_amount,
         "balance_due": total_amount - amount,
         "product_type": product["Product Type "],
