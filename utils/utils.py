@@ -269,6 +269,7 @@ def save_or_send_pdf(
     service_invoice_rendered_html,
     invoice_rendered_html,
     cust_id,
+    customer_name,
     send_email=True,
     to_email=None,
 ):
@@ -279,7 +280,9 @@ def save_or_send_pdf(
 
     path = os.path.abspath("output.html")
     converter.convert(
-        f"file:///{path}", "output.pdf", print_options={"scale": 0.5}
+        f"file:///{path}",
+        f"{customer_name} - Contract.pdf",
+        print_options={"scale": 0.5},
     )
 
     # save to s3
@@ -289,10 +292,15 @@ def save_or_send_pdf(
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         region_name=AWS_REGION_NAME,
     )
-    lst_pdf_files = ["output.pdf", "invoice.pdf", "service_invoice.pdf"]
+    lst_pdf_files = [
+        f"{customer_name} - Contract.pdf",
+        f"{customer_name} - Invoice.pdf",
+        f"{customer_name} - Payment Schedule.pdf",
+    ]
     # file_name = "output.pdf"
     bucket_name = "bubble-bucket-0001"
     for file_name in lst_pdf_files:
+        print("fn", file_name)
         s3_key = f"{cust_id}/{file_name}"
         try:
             s3.upload_file(file_name, bucket_name, s3_key)
@@ -306,7 +314,9 @@ def save_or_send_pdf(
 
     path = os.path.abspath("service_invoice.html")
     converter.convert(
-        f"file:///{path}", "service_invoice.pdf", print_options={"scale": 0.5}
+        f"file:///{path}",
+        f"{customer_name} - Payment Schedule.pdf",
+        print_options={"scale": 0.5},
     )
 
     # invoice
@@ -316,7 +326,9 @@ def save_or_send_pdf(
 
     path = os.path.abspath("invoice.html")
     converter.convert(
-        f"file:///{path}", "invoice.pdf", print_options={"scale": 0.5}
+        f"file:///{path}",
+        f"{customer_name} - Invoice.pdf",
+        print_options={"scale": 0.5},
     )
 
     if send_email:
@@ -324,13 +336,20 @@ def save_or_send_pdf(
         # Set your SendGrid API key
         # sendgrid_api_key = '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'
         sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
-        print(SENDGRID_API_KEY)
+        # print(SENDGRID_API_KEY)
         # Set sender and recipient email addresses
         # from_email = "admin@claims-gurus.co.uk"
         # to_email = to_email or "marriam.siddiqui@gmail.com"
 
-        from_email = Email("admin@claims-gurus.co.uk")
+        # from_email = Email("admin@claims-gurus.co.uk")
         # to_email = To("marriam.siddiqui@gmail.com")
+
+        # from sendgrid.helpers.mail import From, To
+
+        from_email = From("admin@claims-gurus.co.uk", "Admin - AutoCover")
+        # to_email = To("admin@claims-gurus.co.uk", "Receiver Name")
+
+        # message = Mail(from_email, to_email, "Subject", "Content")
 
         # Create a Mail object with the PDF attachment
         message = Mail(
@@ -387,7 +406,8 @@ def save_or_send_pdf(
 
         # Clean up temporary files
         os.remove(html_file_path)
-        os.remove("output.pdf")
+        # for file in lst_pdf_files:
+        #     os.remove(file)
 
 
 def send_data_to_closeio(data):

@@ -169,6 +169,7 @@ def chargebee_payment_success_service(chargebee_event):
                 chargebee_event=chargebee_event,
                 vehicle_info=vehicle_info,
             )
+            print("mapped data for cpdf", contract_pdf_data)
             rendered_html = template.render(data=contract_pdf_data)
             print("rendered first html")
             service_invoice_data = map_invoice_data(
@@ -335,6 +336,7 @@ def chargebee_payment_success_service(chargebee_event):
                     invoice_rendered_html=invoice_rendered_html,
                     to_email=customer_data["email"],
                     cust_id=cust_id,
+                    customer_name=customer_data["Full Name"],
                 )
                 logger.info(f"Email sent {email_response['status_code']}")
 

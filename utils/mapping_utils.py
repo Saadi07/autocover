@@ -31,11 +31,11 @@ def map_customer_data(chargebee_event):
 
 
 def map_vehicle_data(
-        vehicle_info,
-        chargebee_data,
-        cust_id,
-        associated_insurance_product,
-        associated_merchant,
+    vehicle_info,
+    chargebee_data,
+    cust_id,
+    associated_insurance_product,
+    associated_merchant,
 ):
     classification_details = vehicle_info["Response"]["DataItems"][
         "ClassificationDetails"
@@ -86,8 +86,8 @@ def map_vehicle_data(
 
 def map_contract_data(chargebee_event, vehicle_info, product):
     fund = (
-            chargebee_event["content"]["invoice"]["total"]
-            - chargebee_event["content"]["invoice"]["amount_paid"]
+        chargebee_event["content"]["invoice"]["total"]
+        - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
@@ -157,22 +157,23 @@ def map_contract_data(chargebee_event, vehicle_info, product):
 
 
 def map_contract_pdf_data(
-        customer_data,
-        vehicle_data,
-        vehicle_info,
-        product_data,
-        chargebee_event,
+    customer_data,
+    vehicle_data,
+    vehicle_info,
+    product_data,
+    chargebee_event,
 ):
     # print("prod", product_data)
 
     contract_count = get_contract_count_from_bubble()
     reference = str(contract_count + 1)
     address = (
-            customer_data["Line 1: Address"]
-            + customer_data["Line 2: Address"]
-            + customer_data["Line 3: Address"]
-            + customer_data["Line 4: Address"]
+        customer_data["Line 1: Address"]
+        + customer_data["Line 2: Address"]
+        + customer_data["Line 3: Address"]
+        + customer_data["Line 4: Address"]
     )
+    print("inside mapping for address", address)
     first_registered_date = vehicle_data["First registered *"]
     first_registered_date = (
         datetime.fromisoformat(first_registered_date)
@@ -197,8 +198,8 @@ def map_contract_pdf_data(
         four_wheel_drive = "No"
 
     fund = (
-            chargebee_event["content"]["invoice"]["total"]
-            - chargebee_event["content"]["invoice"]["amount_paid"]
+        chargebee_event["content"]["invoice"]["total"]
+        - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
 
@@ -207,16 +208,23 @@ def map_contract_pdf_data(
     )
     # iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     formatted_from_date = date_from_timestamp.strftime("%d/%m/%Y")
-
+    print("from date", formatted_from_date)
     term = int(product_data["Variant Term"])
     print(term, type(term))
     date_after_term = date_from_timestamp + relativedelta(months=term)
     formatted_to_date = date_after_term.strftime("%d/%m/%Y")
+    print("to date", formatted_to_date)
     vehicle_price = round(int(vehicle_data["Vehicle price *"]), 2)
     if "Variant Claim limit" in product_data:
         claim_limit = product_data["Variant Claim limit"]
     else:
         claim_limit = " "
+
+    del_date = datetime.utcfromtimestamp(
+        vehicle_data["Delivery date"]
+    ).strftime("%d/%m/%Y")
+
+    sold_price = product_data["RRP"]
 
     response = {
         "title": "Auto Cover",
@@ -227,7 +235,7 @@ def map_contract_pdf_data(
         "email": customer_data["email"],
         "VRN": vehicle_data["VRN"],
         "VIN number": vehicle_data["VIN number"],
-        "Delivery date": vehicle_data["Delivery date"],
+        "Delivery date": del_date,
         "Make": vehicle_data["Make"],
         "Engine capacity *": vehicle_data["Engine capacity *"],
         "Vehicle price *": vehicle_price,
@@ -246,7 +254,7 @@ def map_contract_pdf_data(
         "Variant Term": product_data["Variant Term"],
         "Variant Claim limit": claim_limit,
         "Variant Excess": product_data["Variant Excess"],
-        "Wholesale Price": product_data["Wholesale Price"],
+        "Sold Price": sold_price,
         "funded": funded,
         "formatted_from_date": formatted_from_date,
         "formatted_to_date": formatted_to_date,
@@ -260,8 +268,13 @@ def map_invoice_data(chargebee_event, product, rate):
     # invoice_date = datetime.utcfromtimestamp(
     #     chargebee_event["content"]["invoice"]["generated_at"]
     # ).date()
-    invoice_date = datetime.utcfromtimestamp(
-        chargebee_event["content"]["invoice"]["generated_at"]).date().strftime("%d/%m/%Y")
+    invoice_date = (
+        datetime.utcfromtimestamp(
+            chargebee_event["content"]["invoice"]["generated_at"]
+        )
+        .date()
+        .strftime("%d/%m/%Y")
+    )
     # print("invoice date", invoice_date)
 
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
@@ -269,6 +282,9 @@ def map_invoice_data(chargebee_event, product, rate):
     full_name = f"{customer['first_name']} {customer['last_name']}"
     line1 = billing_address.get("line1", "")
     line2 = billing_address.get("line2", "")
+    city_country = f"{billing_address.get('city', '')}, {billing_address.get('country', '')}"
+    postal_code = billing_address.get("postal_code", "")
+
     date_from_timestamp = datetime.utcfromtimestamp(
         chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
     ).date()
@@ -293,11 +309,17 @@ def map_invoice_data(chargebee_event, product, rate):
     )
     for i in range(1, payment_terms):
         # Increment month and year, keep the day the same as the first date
-        current_date = date_from_timestamp.replace(month=date_from_timestamp.month + i, year=date_from_timestamp.year)
+        current_date = date_from_timestamp.replace(
+            month=date_from_timestamp.month + i, year=date_from_timestamp.year
+        )
 
         # Check if the next month has fewer days and adjust the date if necessary
-        while current_date.day > 28 and current_date.month != 2 and current_date.day > \
-                calendar.monthrange(current_date.year, current_date.month)[1]:
+        while (
+            current_date.day > 28
+            and current_date.month != 2
+            and current_date.day
+            > calendar.monthrange(current_date.year, current_date.month)[1]
+        ):
             current_date -= timedelta(days=1)
 
         formatted_date = current_date.strftime("%d/%m/%Y")
@@ -318,6 +340,8 @@ def map_invoice_data(chargebee_event, product, rate):
         "Full Name": full_name,
         "Line 1: Address": line1,
         "Line 2: Address": line2,
+        "Line 3: Address": city_country,
+        "Line 4: Address": postal_code,
         # "monthly_amount": monthly_amount,
         "invoice_number": invoice_number,
         "invoice_date": invoice_date,
