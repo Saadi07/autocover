@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from utils.utils import *
@@ -277,7 +278,7 @@ def map_invoice_data(chargebee_event, product, rate):
     payment_terms = product["Acc. Flow Number of Instalments"]
     monthly_amount = round(amount + (amount * rate), 2)
     IPT_Amount = round(product["RRP"] * 0.107202400800267, 2)
-    sub_total = round((amount * payment_terms) - IPT_Amount, 2)
+    sub_total = round((amount * payment_terms), 2)
 
     # total_amount = sub_total + (sub_total * rate)
     total_amount = product["RRP"]
@@ -293,6 +294,12 @@ def map_invoice_data(chargebee_event, product, rate):
     for i in range(1, payment_terms):
         # Increment month and year, keep the day the same as the first date
         current_date = date_from_timestamp.replace(month=date_from_timestamp.month + i, year=date_from_timestamp.year)
+
+        # Check if the next month has fewer days and adjust the date if necessary
+        while current_date.day > 28 and current_date.month != 2 and current_date.day > \
+                calendar.monthrange(current_date.year, current_date.month)[1]:
+            current_date -= timedelta(days=1)
+
         formatted_date = current_date.strftime("%d/%m/%Y")
 
         # Create the payment_schedule string
