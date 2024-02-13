@@ -49,6 +49,9 @@ def chargebee_payment_success_service(chargebee_event):
         mileage_to_match = chargebee_event["content"]["subscription"][
             "cf_Vehicle Mileage"
         ]
+        price_to_match = chargebee_event["content"]["subscription"][
+            "cf_Vehicle Price"
+        ]
         brokering_for = chargebee_event["content"]["subscription"][
             "cf_Brokering For"
         ]
@@ -57,7 +60,7 @@ def chargebee_payment_success_service(chargebee_event):
         # )
         logger.info("all prods: {all_insurance_products}")
         product = find_matching_product(
-            all_insurance_products, rate_id_to_match, mileage_to_match
+            all_insurance_products, rate_id_to_match, mileage_to_match,price_to_match
         )
         merchant_id = ""
         if product:
@@ -87,7 +90,7 @@ def chargebee_payment_success_service(chargebee_event):
                 cust_id=cust_id, payload=data_to_be_updated, data_type="User"
             )
             logger.info(f"updating user data {response}")
-            sold_price = product.get("Insurer 1 Premium Total", 0)
+            sold_price = product.get("RRP", 0)
             wholesale_price = product.get("Wholesale Price", 0)
             tax_type = product.get("Tax Type", "")
             dealership = "yes" if product.get("Sales Plugin", False) else "no"
@@ -172,20 +175,30 @@ def chargebee_payment_success_service(chargebee_event):
             print("mapped data for cpdf", contract_pdf_data)
             rendered_html = template.render(data=contract_pdf_data)
             print("rendered first html")
-            service_invoice_data = map_invoice_data(
+
+            mapped_invoice_data = map_invoice_data(
                 chargebee_event=chargebee_event,
                 product=product,
                 rate=rate,
             )
-            print("invoice data: ", service_invoice_data)
+
             invoice_rendered_html = invoice_template.render(
-                data=service_invoice_data
+                data=mapped_invoice_data
             )
             print("invoice_rendered_html done")
-            service_invoice_rendered_html = service_invoice_template.render(
-                data=service_invoice_data
-            )
-            print("service_invoice_rendered_html done")
+            service_invoice_rendered_html = None
+            if "full" in rate_id_to_match.lower():
+                logger.warning(
+                    "Rate ID contains 'full', service invoice will not be rendered."
+                )
+                print(
+                    "Rate ID contains 'full', service invoice will not be rendered."
+                )
+            else:
+                service_invoice_rendered_html = (
+                    service_invoice_template.render(data=mapped_invoice_data)
+                )
+                print("service_invoice_rendered_html done")
             contract_info = {}
             # print("I CAME HERE")
             contract_info = map_contract_data(
@@ -212,8 +225,14 @@ def chargebee_payment_success_service(chargebee_event):
             logger.info(
                 f"sending this data in contract bubble: {contract_info}"
             )
+
             # print("I came here to bubble sending part 2")
-            contract_id = send_to_bubble(contract_info, data_type="Contract")
+            try:
+                contract_id = send_to_bubble(
+                    contract_info, data_type="Contract"
+                )
+            except Exception as e:
+                logger.error(f"An unexpected error occurred in contract: {e}")
             if contract_id:
                 logger.info(f"Data stored in Contract table for {contract_id}")
 
@@ -332,7 +351,11 @@ def chargebee_payment_success_service(chargebee_event):
 
                 email_response = save_or_send_pdf(
                     rendered_html=rendered_html,
-                    service_invoice_rendered_html=service_invoice_rendered_html,
+                    service_invoice_rendered_html=(
+                        service_invoice_rendered_html
+                        if "full" not in rate_id_to_match.lower()
+                        else None
+                    ),
                     invoice_rendered_html=invoice_rendered_html,
                     to_email=customer_data["email"],
                     cust_id=cust_id,
@@ -348,7 +371,7 @@ def chargebee_payment_success_service(chargebee_event):
                 }
                 print("about to update contract info")
                 response = update_bubble(
-                    cust_id=cust_id,
+                    cust_id=contract_id,
                     payload=contract_data_to_be_updated,
                     data_type="Contract",
                 )
@@ -374,7 +397,9 @@ def chargebee_payment_success_service(chargebee_event):
                         data_type="User",
                     )
                     logger.error(f"user status update {response}")
+            else:
+                logger.warning("no contract id")
         else:
-            logger.warning("No contract id")
+            logger.warning("No vehicle data")
     else:
         logger.error("cust_id not found")

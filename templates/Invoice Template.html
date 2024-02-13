@@ -18,7 +18,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: auto;
             width: 100%;
         }
 
@@ -35,8 +35,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin: 10vh;
-            padding: 10vh;
+            margin: 5vh;
+            padding: 5vh;
             width: 100%;
         }
 
@@ -134,7 +134,7 @@
 <body>
     {% set pound_entity = "&#163;" %}
     <div class="mainBody">
-        <div style="margin-top: 40px" class="mainContainer">
+        <div class="mainContainer">
             <div class="company">
                 <div class="companybilling">
                     <div>
@@ -172,17 +172,15 @@
             </div>
             <div class="invoice">
                 <h1 style="color: #170B38">
-                    Payment <br /> Schedule
+                    Invoice
                 </h1>
                 <strong># INV-{{data['invoice_number']}}</strong>
             </div>
-
         </div>
         <div class="paymentSection">
             <div class="payment">
                 <strong>Invoice Date:</strong>
                 <p>{{data["invoice_date"]}}</p>
-
             </div>
             <div class="payment">
                 <strong>Payment Terms:</strong>
@@ -198,7 +196,6 @@
                     <th>
                         Amount
                     </th>
-
                 </tr>
             </thead>
             <tbody>
@@ -206,31 +203,11 @@
                     <td>
                         {{data["product_type"]}} - {{data["variant_name"]}} - {{data["variant_term"]}}
                     </td>
-
                     <td>
                         {{data['total_amount']}}
                     </td>
                 </tr>
-                <!-- <tr class="tableRow2">
-                    <td>
-                        Service Fee
-                    </td>
-
-                    <td>
-                        {{ pound_entity|safe }}0.00
-                    </td>
-                </tr> -->
-                <!-- <tr class="tableRow2">
-                    <td>
-                        Admin Fee
-                    </td>
-
-                    <td>
-                        {{ pound_entity|safe }}0.00
-                    </td>
-                </tr> -->
             </tbody>
-
         </table>
         <div class="totalSection">
             <div class="subTotalSection">

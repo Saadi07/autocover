@@ -63,9 +63,7 @@ def map_vehicle_data(
         "Is the vehicle imported?": imported,
         "Engine capacity *": registration_details["EngineCapacity"],
         "Fuel Type": smmt_details["FuelType"],
-        "First registered *": registration_details[
-            "DateFirstRegistered"
-        ].split("T")[0],
+        "First registered *": registration_details["DateFirstRegistered"].split("T")[0] if registration_details["DateFirstRegistered"] is not None else None,
         "Vehicle Type": smmt_details["BodyStyle"],
         "VRN": subscription_content[
             "cf_Vehicle Registration Number (Licence Plate)*"
@@ -132,18 +130,27 @@ def map_contract_data(chargebee_event, vehicle_info, product):
         "Policy Start Date": iso8601_date_from,
         "static_vehicle_mileage": subscription_content["cf_Vehicle Mileage"],
         "static_vehicle_vrm": vrm,
-        "Accelerated Commission Amount": product[
-            "Acc. Flow Monthly Instalment Amount"
-        ],
-        "Accelerated Flow Type": product["Acc. Flow Type"],
-        "Accelerated Number of Instalments": product[
-            "Acc. Flow Number of Instalments"
-        ],
+        "Accelerated Commission Amount": (
+            product["Acc. Flow Monthly Instalment Amount"]
+            if "Acc. Flow Monthly Instalment Amount" in product
+            else product["RRP"]
+        ),
+        # "Accelerated Flow Type": product["Acc. Flow Type"],
+        "Accelerated Flow Type": (
+            product["Acc. Flow Type"]
+            if "Acc. Flow Type" in product
+            else "One-Time"
+        ),
+        "Accelerated Number of Instalments": (
+            product["Acc. Flow Number of Instalments"]
+            if "Acc. Flow Number of Instalments" in product
+            else 1
+        ),
         "Associated Insurance Product": product["_id"],
         "Final RRP": product["RRP"],
         "Monthly Product": "No",
         "Contract Status": "Live",
-        "Associated Sales Reps": ["1639925052421x587860159738907000"],
+        "Associated Sales Reps": ["1707822104052x108486888219653470"],
         "Final Insurer 1 Underwriting Price": 100,  # dummy value
         "Final Other Merchant Costs": 100,
         "Final Regional Manager Profit": 100,
@@ -175,11 +182,12 @@ def map_contract_pdf_data(
     )
     print("inside mapping for address", address)
     first_registered_date = vehicle_data["First registered *"]
-    first_registered_date = (
-        datetime.fromisoformat(first_registered_date)
-        .date()
-        .strftime("%d/%m/%Y")
-    )
+    if first_registered_date is not None:
+        first_registered_date = (
+            datetime.fromisoformat(first_registered_date)
+            .date()
+            .strftime("%d/%m/%Y")
+        )
 
     aspiration = vehicle_info["Response"]["DataItems"]["TechnicalDetails"][
         "General"
@@ -213,10 +221,12 @@ def map_contract_pdf_data(
     print(term, type(term))
     date_after_term = date_from_timestamp + relativedelta(months=term)
     formatted_to_date = date_after_term.strftime("%d/%m/%Y")
+    formatted_to_date = (datetime.strptime(formatted_to_date, "%d/%m/%Y") - timedelta(days=1)).strftime("%d/%m/%Y")
+
     print("to date", formatted_to_date)
     vehicle_price = round(int(vehicle_data["Vehicle price *"]), 2)
-    if "Variant Claim limit" in product_data:
-        claim_limit = product_data["Variant Claim limit"]
+    if "Product Claim Type" in product_data:
+        claim_limit = product_data["Product Claim Type"]
     else:
         claim_limit = " "
 
@@ -240,7 +250,7 @@ def map_contract_pdf_data(
         "Engine capacity *": vehicle_data["Engine capacity *"],
         "Vehicle price *": vehicle_price,
         "Model": vehicle_data["Model"],
-        "First registered *": first_registered_date,
+        "First registered *": first_registered_date if first_registered_date is not None else None,
         "Dealer": "AutoCover",
         "Annual mileage": vehicle_data["Annual mileage"],
         "Vehicle Type": vehicle_data["Vehicle Type"],
@@ -249,7 +259,7 @@ def map_contract_pdf_data(
         "Is the vehicle imported?": vehicle_data["Is the vehicle imported?"],
         "turbocharged": turbocharged,
         "four wheel drive": four_wheel_drive,
-        "Product Type": product_data["Product Type "],
+        "Product Type": "Asset Protection",
         "Variant Name": product_data["Variant Name"],
         "Variant Term": product_data["Variant Term"],
         "Variant Claim limit": claim_limit,
@@ -290,8 +300,16 @@ def map_invoice_data(chargebee_event, product, rate):
     ).date()
     print("from date", date_from_timestamp)
 
-    amount = product["Acc. Flow Monthly Instalment Amount"]
-    payment_terms = product["Acc. Flow Number of Instalments"]
+    amount = (
+        product["Acc. Flow Monthly Instalment Amount"]
+        if "Acc. Flow Monthly Instalment Amount" in product
+        else product["RRP"]
+    )
+    payment_terms = (
+        product["Acc. Flow Number of Instalments"]
+        if "Acc. Flow Number of Instalments" in product
+        else 1
+    )
     monthly_amount = round(amount + (amount * rate), 2)
     IPT_Amount = round(product["RRP"] * 0.107202400800267, 2)
     sub_total = round((amount * payment_terms), 2)
@@ -309,16 +327,20 @@ def map_invoice_data(chargebee_event, product, rate):
     )
     for i in range(1, payment_terms):
         # Increment month and year, keep the day the same as the first date
-        current_date = date_from_timestamp.replace(
-            month=date_from_timestamp.month + i, year=date_from_timestamp.year
-        )
+        current_date = date_from_timestamp + timedelta(days=30 * i)
+
+        # Adjust month if it exceeds 12
+        current_year = current_date.year + (current_date.month + i - 1) // 12
+        current_month = (current_date.month + i - 1) % 12 + 1
+
+        current_date = current_date.replace(year=current_year, month=current_month)
 
         # Check if the next month has fewer days and adjust the date if necessary
         while (
-            current_date.day > 28
-            and current_date.month != 2
-            and current_date.day
-            > calendar.monthrange(current_date.year, current_date.month)[1]
+                current_date.day > 28
+                and current_date.month != 2
+                and current_date.day
+                > calendar.monthrange(current_date.year, current_date.month)[1]
         ):
             current_date -= timedelta(days=1)
 
@@ -335,7 +357,6 @@ def map_invoice_data(chargebee_event, product, rate):
                 "amount": monthly_amount,
             }
         )
-
     return {
         "Full Name": full_name,
         "Line 1: Address": line1,
@@ -351,8 +372,8 @@ def map_invoice_data(chargebee_event, product, rate):
         "rate": rate,
         "IPT_Amount": IPT_Amount,
         "total_amount": total_amount,
-        "balance_due": total_amount - amount,
-        "product_type": product["Product Type "],
+        "balance_due": total_amount - monthly_amount,
+        "product_type": "Asset Protection",
         "variant_name": product["Variant Name"],
         "variant_term": product["Variant Term"],
     }

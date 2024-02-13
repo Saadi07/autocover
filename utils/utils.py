@@ -39,7 +39,8 @@ def send_to_bubble(data, data_type):
         BUBBLE_API_URL + data_type, headers=BUBBLE_HEADERS, json=data
     )
     result = json.loads(response.text)
-    # print("result", result)
+    print("Data Type", data_type + "Data", data )
+    print("result", result)
     # print("status", result.get("status"))
     return (
         result["id"]
@@ -89,13 +90,13 @@ def get_from_bubble(data_type, limit=100):
 
 
 def find_matching_product(
-    all_records_dict, rate_id_to_match, mileage_to_match
+    all_records_dict, rate_id_to_match, mileage_to_match, price_to_match
 ):
     # print("charge rate", rate_id_to_match)
     product = find_matching_record(
-        all_records_dict, rate_id_to_match, mileage_to_match
+        all_records_dict, rate_id_to_match, mileage_to_match,price_to_match
     )
-
+    print("product", product)
     if not product:
         logger.warning("No matching record found.")
 
@@ -152,13 +153,16 @@ def get_vehicle_info(chargebee_event):
         print(ErrorContent)
 
 
-def find_matching_record(all_records, rate_id, mileage):
+def find_matching_record(all_records, rate_id, mileage,price):
     matched_record = all_records.get(rate_id)
     if matched_record:
         vehicle_mileage_from = matched_record.get("Vehicle Mileage From", 0)
         vehicle_mileage_to = matched_record.get("Vehicle Mileage to", 0)
+        price_from = matched_record.get("Vehicle Value From", 0)
+        price_to = matched_record.get("Vehicle Value To", 0)
 
-        if vehicle_mileage_from <= mileage <= vehicle_mileage_to:
+
+        if vehicle_mileage_from <= mileage <= vehicle_mileage_to and price_from <= price <= price_to:
             return matched_record
         else:
             return None
@@ -266,14 +270,15 @@ def calculate_tax(
 
 def save_or_send_pdf(
     rendered_html,
-    service_invoice_rendered_html,
     invoice_rendered_html,
     cust_id,
     customer_name,
     send_email=True,
     to_email=None,
+    service_invoice_rendered_html=None,
 ):
     # contract file
+    print("in save or send function")
     html_file_path = "output.html"
     with open(html_file_path, "w") as f:
         f.write(rendered_html)
@@ -292,12 +297,17 @@ def save_or_send_pdf(
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         region_name=AWS_REGION_NAME,
     )
-    lst_pdf_files = [
-        f"{customer_name} - Contract.pdf",
-        f"{customer_name} - Invoice.pdf",
-        f"{customer_name} - Payment Schedule.pdf",
-    ]
-    # file_name = "output.pdf"
+    if service_invoice_rendered_html:
+        lst_pdf_files = [
+            f"{customer_name} - Contract.pdf",
+            f"{customer_name} - Invoice.pdf",
+            f"{customer_name} - Payment Schedule.pdf",
+        ]
+    else:
+        lst_pdf_files = [
+            f"{customer_name} - Contract.pdf",
+            f"{customer_name} - Invoice.pdf",
+        ]
     bucket_name = "bubble-bucket-0001"
     for file_name in lst_pdf_files:
         print("fn", file_name)
@@ -308,16 +318,17 @@ def save_or_send_pdf(
         except Exception as e:
             print("Error uploading file to S3:", e)
     # service invoice
-    si_html_file_path = "service_invoice.html"
-    with open(si_html_file_path, "w") as f:
-        f.write(service_invoice_rendered_html)
+    if service_invoice_rendered_html:
+        si_html_file_path = "service_invoice.html"
+        with open(si_html_file_path, "w") as f:
+            f.write(service_invoice_rendered_html)
 
-    path = os.path.abspath("service_invoice.html")
-    converter.convert(
-        f"file:///{path}",
-        f"{customer_name} - Payment Schedule.pdf",
-        print_options={"scale": 0.5},
-    )
+        path = os.path.abspath("service_invoice.html")
+        converter.convert(
+            f"file:///{path}",
+            f"{customer_name} - Payment Schedule.pdf",
+            print_options={"scale": 0.5},
+        )
 
     # invoice
     invoice_html_file_path = "invoice.html"
@@ -333,25 +344,8 @@ def save_or_send_pdf(
 
     if send_email:
         print("Sending email...")
-        # Set your SendGrid API key
-        # sendgrid_api_key = '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'
         sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
-        # print(SENDGRID_API_KEY)
-        # Set sender and recipient email addresses
-        # from_email = "admin@claims-gurus.co.uk"
-        # to_email = to_email or "marriam.siddiqui@gmail.com"
-
-        # from_email = Email("admin@claims-gurus.co.uk")
-        # to_email = To("marriam.siddiqui@gmail.com")
-
-        # from sendgrid.helpers.mail import From, To
-
         from_email = From("admin@claims-gurus.co.uk", "Admin - AutoCover")
-        # to_email = To("admin@claims-gurus.co.uk", "Receiver Name")
-
-        # message = Mail(from_email, to_email, "Subject", "Content")
-
-        # Create a Mail object with the PDF attachment
         message = Mail(
             from_email=from_email,
             to_emails=to_email,
@@ -360,10 +354,10 @@ def save_or_send_pdf(
         )
         print("about to send email")
 
-        # creating list for sending all 3 in email
         lst_attachments = []
 
         for file_path in lst_pdf_files:
+            print("2nd lst_pdf", lst_pdf_files)
             with open(file_path, "rb") as f:
                 print(f"Processing file: {file_path}")
                 data = f.read()
@@ -374,17 +368,15 @@ def save_or_send_pdf(
                     FileType("application/pdf"),
                     Disposition("attachment"),
                 )
-                # message.attachment = attachedFile
+
                 lst_attachments.append(attachedFile)
 
         message.attachment = lst_attachments
 
         # Send the email
-        # logger.info(f"about to send email")
         print("about to send email")
         try:
             print("about to send email in try")
-            # response = sg.send(message)
             response = sg.client.mail.send.post(request_body=message.get())
             logger.info(
                 f"sendgrid stuff: {response.status_code},body: {response.body}"
@@ -392,7 +384,6 @@ def save_or_send_pdf(
             print(
                 "response from sendgrid:", response.status_code, response.body
             )
-            # print(response.headers)
             logger.info(
                 f"Email sent successfully. Status code: {response.status_code}"
             )
@@ -406,8 +397,6 @@ def save_or_send_pdf(
 
         # Clean up temporary files
         os.remove(html_file_path)
-        # for file in lst_pdf_files:
-        #     os.remove(file)
 
 
 def send_data_to_closeio(data):
