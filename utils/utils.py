@@ -11,7 +11,7 @@ from config.configuration import (
     AWS_SECRET_ACCESS_KEY,
     AWS_REGION_NAME,
 )
-
+import time
 from config.logger import logger
 import requests
 import boto3
@@ -24,7 +24,6 @@ import base64
 import os
 from pyhtml2pdf import converter
 from closeio_api import Client
-
 
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail, Attachment
@@ -39,7 +38,7 @@ def send_to_bubble(data, data_type):
         BUBBLE_API_URL + data_type, headers=BUBBLE_HEADERS, json=data
     )
     result = json.loads(response.text)
-    print("Data Type", data_type + "Data", data )
+    print("Data Type", data_type + "Data", data)
     print("result", result)
     # print("status", result.get("status"))
     return (
@@ -52,18 +51,37 @@ def send_to_bubble(data, data_type):
 def update_bubble(cust_id, payload, data_type):
     bubble_update_url = f"{BUBBLE_API_URL}{data_type}/{cust_id}"
     logger.info(f"bubble_update_url {bubble_update_url}")
-    # print("payload", payload)
+    print("payload", payload)
     # print("headers", BUBBLE_HEADERS)
 
     response = requests.patch(
         bubble_update_url, headers=BUBBLE_HEADERS2, json=payload
     )
     logger.info(f" update bubble response {response}")
-
+    print("response", response)
     logger.info(f"Bubble update response: {response.text}")
     if response.status_code == 204:
         return True
     # return json.loads(response.text)
+
+
+def get_merchant(cust_id, data_type):
+    bubble_get_url = f"{BUBBLE_API_URL}{data_type}/{cust_id}"
+    # logger.info(f"bubble_update_url {bubble_get_url}")
+    # print("payload", payload)
+    # print("headers", BUBBLE_HEADERS)
+
+    response = requests.get(
+        bubble_get_url, headers=BUBBLE_HEADERS2
+    )
+    if response.status_code == 200:
+        data = response.json().get("response", {})
+        print("data", data)
+        if data:
+            return json.loads(response.text)
+    else:
+        print(f"Error: {response.status_code}")
+        return None
 
 
 def get_from_bubble(data_type, limit=100):
@@ -90,11 +108,11 @@ def get_from_bubble(data_type, limit=100):
 
 
 def find_matching_product(
-    all_records_dict, rate_id_to_match, mileage_to_match, price_to_match
+        all_records_dict, rate_id_to_match, mileage_to_match, price_to_match
 ):
     # print("charge rate", rate_id_to_match)
     product = find_matching_record(
-        all_records_dict, rate_id_to_match, mileage_to_match,price_to_match
+        all_records_dict, rate_id_to_match, mileage_to_match, price_to_match
     )
     print("product", product)
     if not product:
@@ -107,6 +125,7 @@ def get_merchant_from_bubble(data_type, merchant_name):
     response = requests.get(
         f"{BUBBLE_API_URL}{data_type}", headers=BUBBLE_HEADERS
     )
+    print("response", response)
 
     if response.status_code == 200:
         data = response.json().get("response", {}).get("results", [])
@@ -114,7 +133,7 @@ def get_merchant_from_bubble(data_type, merchant_name):
         for merchant in data:
             # print(merchant)
             if merchant.get("Merchant Name") == merchant_name:
-                # print(merchant)
+                print("found merchant", merchant)
                 return merchant.get("_id")
         return None
     else:
@@ -126,6 +145,7 @@ def get_vehicle_info(chargebee_event):
     vehicle_reg_number = chargebee_event["content"]["subscription"].get(
         "cf_Vehicle Registration Number (Licence Plate)*", ""
     )
+    print("vehicle reg number", vehicle_reg_number)
     ResponseJSON = ""
 
     Payload = {
@@ -141,7 +161,7 @@ def get_vehicle_info(chargebee_event):
         ),
         params=Payload,
     )
-
+    print("request response here", r)
     if r.status_code == requests.codes.ok:
         ResponseJSON = r.json()
         return ResponseJSON
@@ -153,14 +173,13 @@ def get_vehicle_info(chargebee_event):
         print(ErrorContent)
 
 
-def find_matching_record(all_records, rate_id, mileage,price):
+def find_matching_record(all_records, rate_id, mileage, price):
     matched_record = all_records.get(rate_id)
     if matched_record:
         vehicle_mileage_from = matched_record.get("Vehicle Mileage From", 0)
         vehicle_mileage_to = matched_record.get("Vehicle Mileage to", 0)
         price_from = matched_record.get("Vehicle Value From", 0)
         price_to = matched_record.get("Vehicle Value To", 0)
-
 
         if vehicle_mileage_from <= mileage <= vehicle_mileage_to and price_from <= price <= price_to:
             return matched_record
@@ -171,7 +190,7 @@ def find_matching_record(all_records, rate_id, mileage,price):
 
 
 def calculate_tax(
-    sold_price, wholesale_price, tax_type, dealership, short_code
+        sold_price, wholesale_price, tax_type, dealership, short_code
 ):
     def is_empty(property):
         return (
@@ -269,13 +288,13 @@ def calculate_tax(
 
 
 def save_or_send_pdf(
-    rendered_html,
-    invoice_rendered_html,
-    cust_id,
-    customer_name,
-    send_email=True,
-    to_email=None,
-    service_invoice_rendered_html=None,
+        rendered_html,
+        invoice_rendered_html,
+        cust_id,
+        customer_name,
+        send_email=True,
+        to_email=None,
+        service_invoice_rendered_html=None,
 ):
     # contract file
     print("in save or send function")
@@ -309,14 +328,25 @@ def save_or_send_pdf(
             f"{customer_name} - Invoice.pdf",
         ]
     bucket_name = "bubble-bucket-0001"
+
     for file_name in lst_pdf_files:
         print("fn", file_name)
         s3_key = f"{cust_id}/{file_name}"
-        try:
-            s3.upload_file(file_name, bucket_name, s3_key)
-            print(f"File uploaded successfully to S3: {cust_id}/{file_name}")
-        except Exception as e:
-            print("Error uploading file to S3:", e)
+        retries = 0
+        while retries < 2:
+            try:
+                s3.upload_file(file_name, bucket_name, s3_key)
+                print(f"File uploaded successfully to S3: {cust_id}/{file_name}")
+                break  # Exit the retry loop if upload is successful
+            except Exception as e:
+                print("Error uploading file to S3:", e)
+                retries += 1
+                if retries < 2:
+                    print("Retrying...")
+                    time.sleep(1)  # Wait for 1 second before retrying
+                else:
+                    print(f"Maximum retries ({2}) reached. Upload failed for {file_name}.")
+
     # service invoice
     if service_invoice_rendered_html:
         si_html_file_path = "service_invoice.html"
@@ -350,14 +380,42 @@ def save_or_send_pdf(
             from_email=from_email,
             to_emails=to_email,
             subject="AutoCover Contract",
-            html_content="Please find the attached PDF.",
+            html_content=f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>AutoCover Purchase Confirmation</title>
+                </head>
+                <body>
+                    <p>Dear {customer_name},</p>
+
+                    <p>Thank you for purchasing one of our AutoCover products.</p>
+
+                    <p>We noticed that you hadn’t opened our last email following the purchase of your Combined RTI GAP product.</p>
+
+                    <p>In case this means you don’t have a record of your policy Contract or Invoice, we have attached them both again for you.</p>
+
+                    <p><strong>Please note:</strong> This is an automated email to ensure you have received your documents. This is not a new invoice, and there are no new payments required other than those outlined at the time of purchase.</p>
+
+                    <p>Best regards,<br>
+                    The AutoCover Team</p>
+                </body>
+                </html>
+                """,
         )
         print("about to send email")
+        lst_pdf_files2 = [
+            f"{customer_name} - Contract.pdf",
+            f"{customer_name} - Invoice.pdf",
+
+        ]
 
         lst_attachments = []
 
-        for file_path in lst_pdf_files:
-            print("2nd lst_pdf", lst_pdf_files)
+        for file_path in lst_pdf_files2:
+            print("2nd lst_pdf", lst_pdf_files2)
             with open(file_path, "rb") as f:
                 print(f"Processing file: {file_path}")
                 data = f.read()

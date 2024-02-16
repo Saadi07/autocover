@@ -60,7 +60,7 @@ def chargebee_payment_success_service(chargebee_event):
         # )
         logger.info("all prods: {all_insurance_products}")
         product = find_matching_product(
-            all_insurance_products, rate_id_to_match, mileage_to_match,price_to_match
+            all_insurance_products, rate_id_to_match, mileage_to_match, price_to_match
         )
         merchant_id = ""
         if product:
@@ -79,6 +79,10 @@ def chargebee_payment_success_service(chargebee_event):
             # print("merchant_id from if elif: ", merchant_id)
             associated_insurance_product = [product["_id"]]
             # associated_merchant = merchant_id
+            merchant_group = get_merchant("1694182693471x292524019912540160", "Merchant Group")
+            if merchant_group:
+                print(f"found merchant group id from bubble: {merchant_group}")
+                logger.info(f"found merchant group id from bubble: {merchant_group}")
 
             data_to_be_updated = {
                 "Associated Merchants": [merchant_id],
@@ -130,12 +134,19 @@ def chargebee_payment_success_service(chargebee_event):
             try:
                 logger.info(f"vehicledata: {vehicle_data}")
                 vehicle_id = send_to_bubble(vehicle_data, data_type="Vehicle")
+                product_id = product["_id"]
                 if vehicle_id:
                     update_bubble(
                         cust_id=cust_id,
                         payload={"Associated Vehicle": [vehicle_id]},
                         data_type="User",
                     )
+                    update_bubble(
+                        cust_id=product_id,
+                        payload={"Associated Vehicle": vehicle_id},
+                        data_type="Insurance Product",
+                    )
+
             except Exception as e:
                 logger.error(f"An unexpected error occurred: {e}")
             logger.info(f"vehicle Data send to bubble for {vehicle_id}")
@@ -157,8 +168,8 @@ def chargebee_payment_success_service(chargebee_event):
             iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
             formatted_to_date = date_to_timestamp.strftime("%d/%m/%Y")
             fund = (
-                chargebee_event["content"]["invoice"]["total"]
-                - chargebee_event["content"]["invoice"]["amount_paid"]
+                    chargebee_event["content"]["invoice"]["total"]
+                    - chargebee_event["content"]["invoice"]["amount_paid"]
             )
 
             sales_rep = chargebee_event["content"]["subscription"][
@@ -199,18 +210,33 @@ def chargebee_payment_success_service(chargebee_event):
                     service_invoice_template.render(data=mapped_invoice_data)
                 )
                 print("service_invoice_rendered_html done")
+
             contract_info = {}
             # print("I CAME HERE")
             contract_info = map_contract_data(
                 vehicle_info=vehicle_info,
                 chargebee_event=chargebee_event,
                 product=product,
+                merchant=merchant_group,
+                merchant_name=merchant_id,
+
             )
+            if merchant_id and cust_id:
+                print("Merchant ID is ", merchant_id, "and cust_id is ", cust_id)
+                data_to_update = {"Associated Merchant Users": [cust_id]}  # Fixed the dictionary definition
+                data_to_update_in_users = {"Associated Merchants": [merchant_id]}  # Fixed the dictionary definition
+                updated_merchant = update_bubble(merchant_id, data_to_update, "Merchant")
+                updated_user = update_bubble(cust_id, data_to_update_in_users, "User")
+                print("updated_merchant", updated_merchant)
 
             contract_info["Merchant Name"] = brokering_for
+            contract_info["Merchant Name 2"] = merchant_id
+
             contract_info["Sold Price"] = sold_price
             contract_info["Insurer"] = product["Insurer 1"]
-            contract_info["Associated Vehicle"] = vehicle_id
+            if vehicle_id:
+                contract_info["Associated Vehicle"] = vehicle_id
+            # contract_info["Associated Vehicle"] = vehicle_id
             print("This is the contract info")
             contract_count = get_contract_count_from_bubble()
             print("contract_count", contract_count)
@@ -218,9 +244,9 @@ def chargebee_payment_success_service(chargebee_event):
                 contract_info["Contract ID"] = "AC" + str(contract_count + 1)
             else:
                 contract_info["Contract ID"] = "AC0"
-            contract_info["Final Total Associated Costs"] = (
-                product["Merchant Commission Value"] + sold_price
-            )
+            # contract_info["Final Total Associated Costs"] = (
+            #     product["Merchant Commission Value"] + sold_price
+            # )
 
             logger.info(
                 f"sending this data in contract bubble: {contract_info}"
@@ -234,6 +260,20 @@ def chargebee_payment_success_service(chargebee_event):
             except Exception as e:
                 logger.error(f"An unexpected error occurred in contract: {e}")
             if contract_id:
+                if vehicle_id:
+                    date_from_timestamp = datetime.utcfromtimestamp(
+                        chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
+                    )
+                    # iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    formatted_from_date = date_from_timestamp.strftime("%m/%d/%Y")
+                    data_to_update = {"Associated Contract": [contract_id], "Associated Merchant": merchant_id,
+                                      "Delivery date": formatted_from_date}
+                    data_updated = update_bubble(
+                        cust_id=vehicle_id,
+                        payload=data_to_update,
+                        data_type="Vehicle",
+                    )
+                    print("data_updated", data_updated)
                 logger.info(f"Data stored in Contract table for {contract_id}")
 
                 close_io_data = {}
@@ -291,8 +331,8 @@ def chargebee_payment_success_service(chargebee_event):
                     "%Y-%m-%dT%H:%M:%SZ"
                 )
                 fund = (
-                    chargebee_event["content"]["invoice"]["total"]
-                    - chargebee_event["content"]["invoice"]["amount_paid"]
+                        chargebee_event["content"]["invoice"]["total"]
+                        - chargebee_event["content"]["invoice"]["amount_paid"]
                 )
                 funded = False if fund == 0 else True
 
@@ -310,8 +350,8 @@ def chargebee_payment_success_service(chargebee_event):
                         "First registered *"
                     ],
                     "Make/Model": vehicle_data["Make"]
-                    + "/"
-                    + vehicle_data["Model"],
+                                  + "/"
+                                  + vehicle_data["Model"],
                     "Mileage": vehicle_data["Annual mileage"],
                     "Vehicle - Price": vehicle_data["Vehicle price *"],
                     "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
