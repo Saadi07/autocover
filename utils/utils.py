@@ -309,6 +309,18 @@ def save_or_send_pdf(
         print_options={"scale": 0.5},
     )
 
+    # invoice
+    invoice_html_file_path = "invoice.html"
+    with open(invoice_html_file_path, "w") as f:
+        f.write(invoice_rendered_html)
+
+    path = os.path.abspath("invoice.html")
+    converter.convert(
+        f"file:///{path}",
+        f"{customer_name} - Invoice.pdf",
+        print_options={"scale": 0.5},
+    )
+
     # save to s3
     s3 = boto3.client(
         "s3",
@@ -320,7 +332,7 @@ def save_or_send_pdf(
         lst_pdf_files = [
             f"{customer_name} - Contract.pdf",
             f"{customer_name} - Invoice.pdf",
-            f"{customer_name} - Payment Schedule.pdf",
+
         ]
     else:
         lst_pdf_files = [
@@ -333,7 +345,7 @@ def save_or_send_pdf(
         print("fn", file_name)
         s3_key = f"{cust_id}/{file_name}"
         retries = 0
-        while retries < 2:
+        while retries < 3:
             try:
                 s3.upload_file(file_name, bucket_name, s3_key)
                 print(f"File uploaded successfully to S3: {cust_id}/{file_name}")
@@ -341,11 +353,11 @@ def save_or_send_pdf(
             except Exception as e:
                 print("Error uploading file to S3:", e)
                 retries += 1
-                if retries < 2:
+                if retries < 3:
                     print("Retrying...")
-                    time.sleep(1)  # Wait for 1 second before retrying
+                    time.sleep(3)  # Wait for 1 second before retrying
                 else:
-                    print(f"Maximum retries ({2}) reached. Upload failed for {file_name}.")
+                    print(f"Maximum retries ({3}) reached. Upload failed for {file_name}.")
 
     # service invoice
     if service_invoice_rendered_html:
@@ -360,17 +372,17 @@ def save_or_send_pdf(
             print_options={"scale": 0.5},
         )
 
-    # invoice
-    invoice_html_file_path = "invoice.html"
-    with open(invoice_html_file_path, "w") as f:
-        f.write(invoice_rendered_html)
-
-    path = os.path.abspath("invoice.html")
-    converter.convert(
-        f"file:///{path}",
-        f"{customer_name} - Invoice.pdf",
-        print_options={"scale": 0.5},
-    )
+    # # invoice
+    # invoice_html_file_path = "invoice.html"
+    # with open(invoice_html_file_path, "w") as f:
+    #     f.write(invoice_rendered_html)
+    #
+    # path = os.path.abspath("invoice.html")
+    # converter.convert(
+    #     f"file:///{path}",
+    #     f"{customer_name} - Invoice.pdf",
+    #     print_options={"scale": 0.5},
+    # )
 
     if send_email:
         print("Sending email...")

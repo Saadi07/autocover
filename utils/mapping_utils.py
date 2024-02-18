@@ -417,35 +417,35 @@ def map_invoice_data(chargebee_event, product, rate):
             "amount": monthly_amount,
         }
     )
-    for i in range(1, payment_terms):
-        # Increment month and year, keep the day the same as the first date
-        current_date = date_from_timestamp + timedelta(days=30 * i)
-
-        # Adjust month if it exceeds 12
-        current_year = current_date.year + (current_date.month + i - 1) // 12
-        current_month = (current_date.month + i - 1) % 12 + 1
-
-        current_date = current_date.replace(year=current_year, month=current_month)
-
-        # Get the number of days in the current month
-        num_days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
-
-        # Adjust the day value if it's greater than the number of days in the month
-        current_date = current_date.replace(day=min(current_date.day, num_days_in_month))
-
-        formatted_date = current_date.strftime("%d/%m/%Y")
-
-        # Create the payment_schedule string
-        payment_schedule = f"Payment ({i + 1} of {payment_terms})"
-
-        # Create the dictionary for the current iteration and append it to the list
-        payment_schedule_list.append(
-            {
-                "payment_schedule": payment_schedule,
-                "date": formatted_date,
-                "amount": monthly_amount,
-            }
-        )
+    # for i in range(1, payment_terms):
+    #     # Increment month and year, keep the day the same as the first date
+    #     current_date = date_from_timestamp + timedelta(days=30 * i)
+    #
+    #     # Adjust month if it exceeds 12
+    #     current_year = current_date.year + (current_date.month + i - 1) // 12
+    #     current_month = (current_date.month + i - 1) % 12 + 1
+    #
+    #     current_date = current_date.replace(year=current_year, month=current_month)
+    #
+    #     # Get the number of days in the current month
+    #     num_days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
+    #
+    #     # Adjust the day value if it's greater than the number of days in the month
+    #     current_date = current_date.replace(day=min(current_date.day, num_days_in_month))
+    #
+    #     formatted_date = current_date.strftime("%d/%m/%Y")
+    #
+    #     # Create the payment_schedule string
+    #     payment_schedule = f"Payment ({i + 1} of {payment_terms})"
+    #
+    #     # Create the dictionary for the current iteration and append it to the list
+    #     payment_schedule_list.append(
+    #         {
+    #             "payment_schedule": payment_schedule,
+    #             "date": formatted_date,
+    #             "amount": monthly_amount,
+    #         }
+    #     )
 
 
 
