@@ -32,11 +32,11 @@ def map_customer_data(chargebee_event):
 
 
 def map_vehicle_data(
-        vehicle_info,
-        chargebee_data,
-        cust_id,
-        associated_insurance_product,
-        associated_merchant,
+    vehicle_info,
+    chargebee_data,
+    cust_id,
+    associated_insurance_product,
+    associated_merchant,
 ):
     classification_details = vehicle_info["Response"]["DataItems"][
         "ClassificationDetails"
@@ -74,20 +74,23 @@ def map_vehicle_data(
         "Is the vehicle imported?": imported,
         "Engine capacity *": registration_details["EngineCapacity"],
         "Fuel Type": smmt_details["FuelType"],
-        "First registered *": registration_details["DateFirstRegistered"].split("T")[0] if registration_details[
-                                                                                    "DateFirstRegistered"] is not None else None,
+        "First registered *": (
+            registration_details["DateFirstRegistered"].split("T")[0]
+            if registration_details["DateFirstRegistered"] is not None
+            else None
+        ),
         "Vehicle Type": registration_details["VehicleClass"],
-        "Is the vehicle turbo charged? *":turbocharged,
+        "Is the vehicle turbo charged? *": turbocharged,
         "VRN": subscription_content[
             "cf_Vehicle Registration Number (Licence Plate)*"
         ],
-
-        "Current or point of sale mileage *": subscription_content["cf_Vehicle Mileage"],
+        "Current or point of sale mileage *": subscription_content[
+            "cf_Vehicle Mileage"
+        ],
         "Annual mileage": subscription_content["cf_Vehicle Mileage"],
         "Vehicle price *": subscription_content["cf_Vehicle Price"],
         "Dealer bought from": subscription_content["cf_Dealer Name"],
         "Sale Type": "New" if is_new_vehicle else "Used",
-
         "Associated User": cust_id,
         "If available on the level of cover you choose, would you like to include the optional cover for Catalytic Convertor? *": "No",
         "If available on the level of cover you choose, would you like to include the optional cover for the motorised / powered roof? *": "No",
@@ -99,33 +102,63 @@ def map_vehicle_data(
     return vehicle_info
 
 
-def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_name):
+def map_contract_data(
+    chargebee_event, vehicle_info, product, merchant, merchant_name
+):
     fund = (
-            chargebee_event["content"]["invoice"]["total"]
-            - chargebee_event["content"]["invoice"]["amount_paid"]
+        chargebee_event["content"]["invoice"]["total"]
+        - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
     billing_address = chargebee_event["content"]["customer"]["billing_address"]
     ipt_amount = round(product["RRP"] * 0.107202400800267, 2)
-    regional_manager_profit = product.get("Regional Manager Commission Rate", 0)
+    regional_manager_profit = product.get(
+        "Regional Manager Commission Rate", 0
+    )
     sold_price = product["RRP"]
-    regional_manager_value = product.get("Regional Manager Commission Value", 0)
-    final_regional_manager_profit = regional_manager_profit * sold_price + regional_manager_value
-    account_manager_2_rate = product.get("Account Manager 2 Commission Rate", 0)
-    account_manager_2_value = product.get("Account Manager 2 Commission Value", 0)
-    final_regional_manager_2_profit = account_manager_2_rate * sold_price + account_manager_2_value
-    account_manager_3_rate = product.get("Account Manager 3 Commission Rate", 0)
-    account_manager_3_value = product.get("Account Manager 3 Commission Value", 0)
-    final_regional_manager_3_profit = account_manager_3_rate * sold_price + account_manager_3_value
+    regional_manager_value = product.get(
+        "Regional Manager Commission Value", 0
+    )
+    final_regional_manager_profit = (
+        regional_manager_profit * sold_price + regional_manager_value
+    )
+    account_manager_2_rate = product.get(
+        "Account Manager 2 Commission Rate", 0
+    )
+    account_manager_2_value = product.get(
+        "Account Manager 2 Commission Value", 0
+    )
+    final_regional_manager_2_profit = (
+        account_manager_2_rate * sold_price + account_manager_2_value
+    )
+    account_manager_3_rate = product.get(
+        "Account Manager 3 Commission Rate", 0
+    )
+    account_manager_3_value = product.get(
+        "Account Manager 3 Commission Value", 0
+    )
+    final_regional_manager_3_profit = (
+        account_manager_3_rate * sold_price + account_manager_3_value
+    )
     sales_rep_commision_rate = product.get("Sales Rep Commission Rate", 0)
     sales_rep_commission_value = product.get("Sales Rep Commission Value", 0)
-    final_sales_rep_profit = sales_rep_commision_rate * sold_price + sales_rep_commission_value
+    final_sales_rep_profit = (
+        sales_rep_commision_rate * sold_price + sales_rep_commission_value
+    )
     sales_rep_2_commision_rate = product.get("Sales Rep 2 Commission Rate", 0)
-    sales_rep_2_commision_value = product.get("Sales Rep 2 Commission Value", 0)
-    final_sales_rep_2_profit = sales_rep_2_commision_rate * sold_price + sales_rep_2_commision_value
+    sales_rep_2_commision_value = product.get(
+        "Sales Rep 2 Commission Value", 0
+    )
+    final_sales_rep_2_profit = (
+        sales_rep_2_commision_rate * sold_price + sales_rep_2_commision_value
+    )
     sales_comission_rate = product.get("Sales Plugin Commission Rate", 0)
-    sales_plugin_commission_value = product.get("Sales Plugin Commission Value", 0)
-    final_sales_plugin_profit = sales_comission_rate * sold_price + sales_plugin_commission_value
+    sales_plugin_commission_value = product.get(
+        "Sales Plugin Commission Value", 0
+    )
+    final_sales_plugin_profit = (
+        sales_comission_rate * sold_price + sales_plugin_commission_value
+    )
     customer = chargebee_event["content"]["customer"]
     full_name = f"{customer['first_name']} {customer['last_name']}"
     line1 = billing_address.get("line1", "")
@@ -139,7 +172,12 @@ def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_
         "VehicleRegistration"
     ]
     ipt_amount = round(product["RRP"] * 0.107202400800267, 2)
-
+    brokering_for = chargebee_event["content"]["subscription"][
+        "cf_Brokering For"
+    ]
+    merchant_id = get_merchant_from_bubble(
+        data_type="Merchant", merchant_name=brokering_for
+    )
     subscription_content = chargebee_event["content"]["subscription"]
     vrm = vehicle_info["Request"]["DataKeys"]["Vrm"]
     date_from_timestamp = datetime.utcfromtimestamp(
@@ -148,23 +186,35 @@ def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_
     iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_to_timestamp = datetime.utcfromtimestamp(
         chargebee_event["content"]["invoice"]["line_items"][0]["date_to"]
-
     )
     merchat_other_cost = merchant.get("Other Costs Commission Rate", 0)
     final_merchent_other_cost = merchat_other_cost * sold_price
     merchant_comission_rate = product.get("Merchant Commission Rate", 0)
     merchant_comission_value = product.get("Merchant Commission Value", 0)
-    final_merchant_profit = merchant_comission_rate * sold_price + merchant_comission_value
+    final_merchant_profit = (
+        merchant_comission_rate * sold_price + merchant_comission_value
+    )
     iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     term = int(product["Variant Term"])
     print(term, type(term))
     date_after_term = date_from_timestamp + relativedelta(months=term)
     formatted_to_date = date_after_term.strftime("%Y-%m-%dT%H:%M:%SZ")
-    formatted_to_date = (datetime.strptime(formatted_to_date, "%Y-%m-%dT%H:%M:%SZ") - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    associated_sales_rep = ["1707822104052x108486888219653470", product.get("Sales Rep 2", ""),
-                            product.get("Account Manager 2", ""), product.get("Account Manager 3", ""),
-                            product.get("Sales Rep", "")],
-    filtered_sales_rep = [entry for entry in associated_sales_rep if entry and entry != ""]
+    formatted_to_date = (
+        datetime.strptime(formatted_to_date, "%Y-%m-%dT%H:%M:%SZ")
+        - timedelta(days=1)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    associated_sales_rep = (
+        [
+            "1707822104052x108486888219653470",
+            product.get("Sales Rep 2", ""),
+            product.get("Account Manager 2", ""),
+            product.get("Account Manager 3", ""),
+            product.get("Sales Rep", ""),
+        ],
+    )
+    filtered_sales_rep = [
+        entry for entry in associated_sales_rep if entry and entry != ""
+    ]
 
     print("final_regional_manager_profit:", final_regional_manager_profit)
     print("final_regional_manager_2_profit:", final_regional_manager_2_profit)
@@ -175,21 +225,40 @@ def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_
     print("final_merchant_profit:", final_merchant_profit)
 
     final_total_associatied_cost = (
-            final_regional_manager_profit +
-            final_regional_manager_2_profit +
-            final_regional_manager_3_profit +
-            final_sales_rep_profit +
-            final_sales_rep_2_profit +
-            final_sales_plugin_profit +
-            final_merchant_profit
+        final_regional_manager_profit
+        + final_regional_manager_2_profit
+        + final_regional_manager_3_profit
+        + final_sales_rep_profit
+        + final_sales_rep_2_profit
+        + final_sales_plugin_profit
+        + final_merchant_profit
     )
     sales_agent = subscription_content["cf_Sales Agent"]
     print("final_total_associatied_cost:", final_total_associatied_cost)
-    final_full_payment_facilitator_cost = 0.022 * sold_price if funded == "No" else 0
-    final_funded_payment_facilitator_cost = 0.15 * sold_price if funded == "Yes" else 0
-    print("final_full_payment_facilitator_cost:", final_full_payment_facilitator_cost)
-    print("final_funded_payment_facilitator_cost:", final_funded_payment_facilitator_cost)
+    final_full_payment_facilitator_cost = (
+        0.022 * sold_price if funded == "No" else 0
+    )
+    final_funded_payment_facilitator_cost = (
+        0.15 * sold_price if funded == "Yes" else 0
+    )
+    print(
+        "final_full_payment_facilitator_cost:",
+        final_full_payment_facilitator_cost,
+    )
+    print(
+        "final_funded_payment_facilitator_cost:",
+        final_funded_payment_facilitator_cost,
+    )
+
+    contract_count = get_contract_count_from_bubble()
+    print("contract_count when mapping contract data", contract_count)
+    if contract_count is not None:
+        contract_id = "AC" + str(contract_count + 1)
+    else:
+        contract_id = "AC0"
+
     contract_info = {
+        "Contract ID": contract_id,
         "static_customer_name": full_name,
         "static_customer_email": email,
         "static_customer_phone_text": phone_number,
@@ -197,12 +266,13 @@ def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_
         "Funded Product": funded,
         "static_product_name": product["Variant Name"],
         "Sales Agent 2": sales_agent if sales_agent else "",
-
         "Final Full Payment Facilitator Cost": final_full_payment_facilitator_cost,
         "Final Funded Payment Facilitator Cost": final_funded_payment_facilitator_cost,
         "Final Customer Tax Amount": ipt_amount,
         "Reconciled": "Yes",
         "Merchant Commission Amount": final_merchant_profit,
+        "Merchant Name": brokering_for,
+        "Merchant Name 2": merchant_id,
         "static_vehicle_colour": registration_details["Colour"],
         "static_vehicle_engine_capacity": registration_details[
             "EngineCapacity"
@@ -229,48 +299,82 @@ def map_contract_data(chargebee_event, vehicle_info, product, merchant,merchant_
         ),
         "Associated Insurance Product": product["_id"],
         "Final RRP": product["RRP"],
+        "Insurer": product["Insurer 1"],
+        "Sold Price": product["RRP"],
         "Monthly Product": "No",
         "Contract Status": "Live",
         "Associated Sales Reps": ["1707822104052x108486888219653470"],
-        "Final Insurer 1 Underwriting Price": product.get("Insurer 1 Premium Total", 0),  # dummy value
-        "Final Sales Plugin Profit": final_sales_plugin_profit if final_sales_plugin_profit is not None else 0,
-        "Final Insurer 1 Underwriting Tax Amount": round(product.get("Insurer 1 Premium Total", 0) * 0.12, 2),
+        "Final Insurer 1 Underwriting Price": product.get(
+            "Insurer 1 Premium Total", 0
+        ),  # dummy value
+        "Final Sales Plugin Profit": (
+            final_sales_plugin_profit
+            if final_sales_plugin_profit is not None
+            else 0
+        ),
+        "Final Insurer 1 Underwriting Tax Amount": round(
+            product.get("Insurer 1 Premium Total", 0) * 0.12, 2
+        ),
         # dummy value
         # "Remaining Claim Budget": product.get("Variant Claim limit", 0),
         # "Remaining Number of Claims": product.get("Number of Claims", 0),
-        "Final Other Merchant Costs": final_merchent_other_cost if final_merchent_other_cost is not None else 0,
-
+        "Final Other Merchant Costs": (
+            final_merchent_other_cost
+            if final_merchent_other_cost is not None
+            else 0
+        ),
         "Final Total Associated Costs": final_total_associatied_cost,
-        "Final Regional Manager Profit": final_regional_manager_profit if final_regional_manager_profit is not None else 0,
-        "Final Account Manager 2 Profit": final_regional_manager_2_profit if final_regional_manager_2_profit is not None else 0,
-        "Final Account Manager 3 Profit": final_regional_manager_3_profit if final_regional_manager_3_profit is not None else 0,
-        "Final Sales Rep 1 Profit": final_sales_rep_profit if final_sales_rep_profit is not None else 0,
-        "Final Sales Rep 2 Profit": final_sales_rep_2_profit if final_sales_rep_2_profit is not None else 0,
+        "Final Regional Manager Profit": (
+            final_regional_manager_profit
+            if final_regional_manager_profit is not None
+            else 0
+        ),
+        "Final Account Manager 2 Profit": (
+            final_regional_manager_2_profit
+            if final_regional_manager_2_profit is not None
+            else 0
+        ),
+        "Final Account Manager 3 Profit": (
+            final_regional_manager_3_profit
+            if final_regional_manager_3_profit is not None
+            else 0
+        ),
+        "Final Sales Rep 1 Profit": (
+            final_sales_rep_profit if final_sales_rep_profit is not None else 0
+        ),
+        "Final Sales Rep 2 Profit": (
+            final_sales_rep_2_profit
+            if final_sales_rep_2_profit is not None
+            else 0
+        ),
         "Final Merchant Tax Amount": 0,
         "Final Merchant Wholesale Tax Rate": 0.12,
         "Final Merchant Wholesale Price": 0,
         # "Contract": contract_link,
     }
-    print("HERE IS CONTRACT",contract_info)
+    print("HERE IS CONTRACT", contract_info)
     return contract_info
 
 
 def map_contract_pdf_data(
-        customer_data,
-        vehicle_data,
-        vehicle_info,
-        product_data,
-        chargebee_event,
+    customer_data,
+    vehicle_data,
+    vehicle_info,
+    product_data,
+    chargebee_event,
 ):
     # print("prod", product_data)
 
     contract_count = get_contract_count_from_bubble()
     reference = str(contract_count + 1)
     address = (
-            customer_data["Line 1: Address"]
-            + " " + customer_data["Line 2: Address"]
-            + " " + customer_data["Line 3: Address"]
-            + " " + customer_data["Line 4: Address"]
+        customer_data["Line 1: Address"]
+        + " "
+        + customer_data["Line 2: Address"]
+        + " "
+        + customer_data["Line 3: Address"]
+        + " "
+        + customer_data["Line 4: Address"]
     )
     print("inside mapping for address", address)
     first_registered_date = vehicle_data["First registered *"]
@@ -298,8 +402,8 @@ def map_contract_pdf_data(
         four_wheel_drive = "No"
 
     fund = (
-            chargebee_event["content"]["invoice"]["total"]
-            - chargebee_event["content"]["invoice"]["amount_paid"]
+        chargebee_event["content"]["invoice"]["total"]
+        - chargebee_event["content"]["invoice"]["amount_paid"]
     )
     funded = "No" if fund == 0 else "Yes"
 
@@ -313,7 +417,9 @@ def map_contract_pdf_data(
     print(term, type(term))
     date_after_term = date_from_timestamp + relativedelta(months=term)
     formatted_to_date = date_after_term.strftime("%d/%m/%Y")
-    formatted_to_date = (datetime.strptime(formatted_to_date, "%d/%m/%Y") - timedelta(days=1)).strftime("%d/%m/%Y")
+    formatted_to_date = (
+        datetime.strptime(formatted_to_date, "%d/%m/%Y") - timedelta(days=1)
+    ).strftime("%d/%m/%Y")
 
     print("to date", formatted_to_date)
     vehicle_price = round(int(vehicle_data["Vehicle price *"]), 2)
@@ -342,7 +448,11 @@ def map_contract_pdf_data(
         "Engine capacity *": vehicle_data["Engine capacity *"],
         "Vehicle price *": vehicle_price,
         "Model": vehicle_data["Model"],
-        "First registered *": first_registered_date if first_registered_date is not None else None,
+        "First registered *": (
+            first_registered_date
+            if first_registered_date is not None
+            else None
+        ),
         "Dealer": "AutoCover",
         "Annual mileage": vehicle_data["Annual mileage"],
         "Vehicle Type": vehicle_data["Vehicle Type"],
@@ -447,9 +557,6 @@ def map_invoice_data(chargebee_event, product, rate):
     #         }
     #     )
 
-
-
-
     return {
         "Full Name": full_name,
         "Line 1: Address": line1,
@@ -470,3 +577,114 @@ def map_invoice_data(chargebee_event, product, rate):
         "variant_name": product["Variant Name"],
         "variant_term": product["Variant Term"],
     }
+
+
+def map_closeio_data(
+    chargebee_event, cust_id, customer_data, product, vehicle_info
+):
+    date_created_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["subscription"]["created_at"]
+    )
+    iso8601_date_created = date_created_timestamp.strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    date_updated_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["invoice"]["updated_at"]
+    )
+    iso8601_date_updated = date_updated_timestamp.strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+    date_from_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
+    )
+    iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+    date_to_timestamp = datetime.utcfromtimestamp(
+        chargebee_event["content"]["invoice"]["line_items"][0]["date_to"]
+    )
+    iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+    base_url = "https://claims-gurus.co.uk/admin_customer_detail/"
+    base_url += cust_id
+    fund = (
+        chargebee_event["content"]["invoice"]["total"]
+        - chargebee_event["content"]["invoice"]["amount_paid"]
+    )
+    funded = False if fund == 0 else True
+    registration_details = vehicle_info["Response"]["DataItems"][
+        "VehicleRegistration"
+    ]
+
+    custom = {
+        "1. End Date": iso8601_date_to,
+        "1. Price": chargebee_event["content"]["subscription"][
+            "subscription_items"
+        ][0]["amount"],
+        "1. Product": product["Variant Name"],
+        "1. Start Date": iso8601_date_from,
+        "ClaimsGurus Customer ID": cust_id,
+        "Engine Size": registration_details["EngineCapacity"],
+        "Financed?": funded,
+        "First Registered Date": (
+            registration_details["DateFirstRegistered"].split("T")[0]
+            if registration_details["DateFirstRegistered"] is not None
+            else None
+        ),
+        "Make/Model": vehicle_info["Response"]["DataItems"][
+            "ClassificationDetails"
+        ]["Smmt"]["Make"]
+        + "/"
+        + vehicle_info["Response"]["DataItems"]["ClassificationDetails"][
+            "Dvla"
+        ]["Model"],
+        "Mileage": chargebee_event["content"]["subscription"][
+            "cf_Vehicle Mileage"
+        ],
+        "Vehicle - Price": chargebee_event["content"]["subscription"][
+            "cf_Vehicle Price"
+        ],
+        "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
+    }
+
+    return {
+        "status_label": "Customer",
+        "opportunities": [],
+        "html_url": (
+            "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/"
+        ),
+        "description": "",
+        "date_created": iso8601_date_created,
+        "updated_by": ("user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9"),
+        "id": (cust_id, ""),
+        "name": customer_data["Full Name"],
+        "tasks": [],
+        "url": base_url,
+        "date_updated": iso8601_date_updated,
+        "status_id": ("stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"),
+        "display_name": customer_data["Full Name"],
+        "custom": custom,
+    }
+
+def map_contact_data(lead_response, customer_data, chargebee_event):
+    return {
+                    "lead_id": lead_response["id"],
+                    "name": customer_data["Full Name"],
+                    "title": "President",
+                    "country": chargebee_event["content"]["customer"][
+                        "billing_address"
+                    ]["country"],
+                    "phones": [
+                        {
+                            "phone": chargebee_event["content"]["customer"][
+                                "phone"
+                            ],
+                            "type": "mobile",
+                        }
+                    ],
+                    "emails": [
+                        {"email": customer_data["email"], "type": "office"}
+                    ],
+                    "urls": [
+                        {"url": "http://twitter.com/google/", "type": "url"}
+                    ],
+                    "custom.cf_j0P7kHmgFTZZnYBFtyPSZ3uQw4dpW8xKcW7Krps8atj": "Account Executive",
+                }

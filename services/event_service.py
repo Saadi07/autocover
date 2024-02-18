@@ -30,7 +30,6 @@ service_invoice_template = template_env.get_template(
 
 def chargebee_payment_success_service(chargebee_event):
     logger.info("starting")
-    # logger.info(f"CHARGEBEE DATA HERE: {chargebee_event}")
 
     customer_data = map_customer_data(chargebee_event)
     logger.info(f"customer_data: {customer_data}")
@@ -38,7 +37,7 @@ def chargebee_payment_success_service(chargebee_event):
     if cust_id:
         logger.info(f"Customer Data sent to Bubble. Customer id: {cust_id}")
         vehicle_info = get_vehicle_info(chargebee_event)
-
+        print("VEHICLE INFO", vehicle_info)
         all_insurance_products = get_from_bubble(data_type="Insurance Product")
 
         rate_id_to_match = chargebee_event["content"]["invoice"]["line_items"][
@@ -60,7 +59,10 @@ def chargebee_payment_success_service(chargebee_event):
         # )
         logger.info("all prods: {all_insurance_products}")
         product = find_matching_product(
-            all_insurance_products, rate_id_to_match, mileage_to_match, price_to_match
+            all_insurance_products,
+            rate_id_to_match,
+            mileage_to_match,
+            price_to_match,
         )
         merchant_id = ""
         if product:
@@ -79,10 +81,14 @@ def chargebee_payment_success_service(chargebee_event):
             # print("merchant_id from if elif: ", merchant_id)
             associated_insurance_product = [product["_id"]]
             # associated_merchant = merchant_id
-            merchant_group = get_merchant("1694182693471x292524019912540160", "Merchant Group")
+            merchant_group = get_merchant(
+                "1694182693471x292524019912540160", "Merchant Group"
+            )
             if merchant_group:
                 print(f"found merchant group id from bubble: {merchant_group}")
-                logger.info(f"found merchant group id from bubble: {merchant_group}")
+                logger.info(
+                    f"found merchant group id from bubble: {merchant_group}"
+                )
 
             data_to_be_updated = {
                 "Associated Merchants": [merchant_id],
@@ -168,8 +174,8 @@ def chargebee_payment_success_service(chargebee_event):
             iso8601_date_to = date_to_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
             formatted_to_date = date_to_timestamp.strftime("%d/%m/%Y")
             fund = (
-                    chargebee_event["content"]["invoice"]["total"]
-                    - chargebee_event["content"]["invoice"]["amount_paid"]
+                chargebee_event["content"]["invoice"]["total"]
+                - chargebee_event["content"]["invoice"]["amount_paid"]
             )
 
             sales_rep = chargebee_event["content"]["subscription"][
@@ -219,40 +225,32 @@ def chargebee_payment_success_service(chargebee_event):
                 product=product,
                 merchant=merchant_group,
                 merchant_name=merchant_id,
-
             )
             if merchant_id and cust_id:
-                print("Merchant ID is ", merchant_id, "and cust_id is ", cust_id)
-                data_to_update = {"Associated Merchant Users": [cust_id]}  # Fixed the dictionary definition
-                data_to_update_in_users = {"Associated Merchants": [merchant_id]}  # Fixed the dictionary definition
-                updated_merchant = update_bubble(merchant_id, data_to_update, "Merchant")
-                updated_user = update_bubble(cust_id, data_to_update_in_users, "User")
+                print(
+                    "Merchant ID is ", merchant_id, "and cust_id is ", cust_id
+                )
+                data_to_update = {
+                    "Associated Merchant Users": [cust_id]
+                }  # Fixed the dictionary definition
+                data_to_update_in_users = {
+                    "Associated Merchants": [merchant_id]
+                }  # Fixed the dictionary definition
+                updated_merchant = update_bubble(
+                    merchant_id, data_to_update, "Merchant"
+                )
+                updated_user = update_bubble(
+                    cust_id, data_to_update_in_users, "User"
+                )
                 print("updated_merchant", updated_merchant)
 
-            contract_info["Merchant Name"] = brokering_for
-            contract_info["Merchant Name 2"] = merchant_id
-
-            contract_info["Sold Price"] = sold_price
-            contract_info["Insurer"] = product["Insurer 1"]
             if vehicle_id:
                 contract_info["Associated Vehicle"] = vehicle_id
-            # contract_info["Associated Vehicle"] = vehicle_id
-            print("This is the contract info")
-            contract_count = get_contract_count_from_bubble()
-            print("contract_count", contract_count)
-            if contract_count is not None:
-                contract_info["Contract ID"] = "AC" + str(contract_count + 1)
-            else:
-                contract_info["Contract ID"] = "AC0"
-            # contract_info["Final Total Associated Costs"] = (
-            #     product["Merchant Commission Value"] + sold_price
-            # )
 
             logger.info(
                 f"sending this data in contract bubble: {contract_info}"
             )
 
-            # print("I came here to bubble sending part 2")
             try:
                 contract_id = send_to_bubble(
                     contract_info, data_type="Contract"
@@ -262,12 +260,19 @@ def chargebee_payment_success_service(chargebee_event):
             if contract_id:
                 if vehicle_id:
                     date_from_timestamp = datetime.utcfromtimestamp(
-                        chargebee_event["content"]["invoice"]["line_items"][0]["date_from"]
+                        chargebee_event["content"]["invoice"]["line_items"][0][
+                            "date_from"
+                        ]
                     )
                     # iso8601_date_from = date_from_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    formatted_from_date = date_from_timestamp.strftime("%m/%d/%Y")
-                    data_to_update = {"Associated Contract": [contract_id], "Associated Merchant": merchant_id,
-                                      "Delivery date": formatted_from_date}
+                    formatted_from_date = date_from_timestamp.strftime(
+                        "%m/%d/%Y"
+                    )
+                    data_to_update = {
+                        "Associated Contract": [contract_id],
+                        "Associated Merchant": merchant_id,
+                        "Delivery date": formatted_from_date,
+                    }
                     data_updated = update_bubble(
                         cust_id=vehicle_id,
                         payload=data_to_update,
@@ -277,114 +282,24 @@ def chargebee_payment_success_service(chargebee_event):
                 logger.info(f"Data stored in Contract table for {contract_id}")
 
                 close_io_data = {}
-                close_io_data["status_label"] = "Customer"
-                close_io_data["opportunities"] = []
-                close_io_data["html_url"] = (
-                    "https://app.close.com/lead/lead_pJnSWX48EbdR87MrEXp50COJJTXAmpb3tyimyiTetoY/"
+                close_io_data = map_closeio_data(
+                    chargebee_event=chargebee_event,
+                    cust_id=cust_id,
+                    customer_data=customer_data,
+                    product=product,
+                    vehicle_info=vehicle_info,
                 )
-                close_io_data["description"] = ""
-                date_created_timestamp = datetime.utcfromtimestamp(
-                    chargebee_event["content"]["subscription"]["created_at"]
-                )
-                iso8601_date_created = date_created_timestamp.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
-                close_io_data["date_created"] = iso8601_date_created
-                close_io_data["updated_by"] = (
-                    "user_Q6ReFolMojBwSlUB3g9qq8esW1hdbqhMUDwpKLoZ2F9"
-                )
-                close_io_data["id"] = (cust_id, "")
-                close_io_data["name"] = customer_data["Full Name"]
-                close_io_data["tasks"] = []
-                base_url = "https://claims-gurus.co.uk/admin_customer_detail/"
 
-                # Appending the variable to the base_url
-                base_url += cust_id
-
-                close_io_data["url"] = base_url
-                date_updated_timestamp = datetime.utcfromtimestamp(
-                    chargebee_event["content"]["invoice"]["updated_at"]
-                )
-                iso8601_date_updated = date_updated_timestamp.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
-                close_io_data["date_updated"] = iso8601_date_updated
-                close_io_data["status_id"] = (
-                    "stat_MjFlXA2c4yOUesIMAZISBqwTdiMdN4k7wKiTPQL8a4M"
-                )
-                close_io_data["display_name"] = customer_data["Full Name"]
-
-                date_from_timestamp = datetime.utcfromtimestamp(
-                    chargebee_event["content"]["invoice"]["line_items"][0][
-                        "date_from"
-                    ]
-                )
-                iso8601_date_from = date_from_timestamp.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
-                date_to_timestamp = datetime.utcfromtimestamp(
-                    chargebee_event["content"]["invoice"]["line_items"][0][
-                        "date_to"
-                    ]
-                )
-                iso8601_date_to = date_to_timestamp.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
-                fund = (
-                        chargebee_event["content"]["invoice"]["total"]
-                        - chargebee_event["content"]["invoice"]["amount_paid"]
-                )
-                funded = False if fund == 0 else True
-
-                close_io_data["custom"] = {
-                    "1. End Date": iso8601_date_to,
-                    "1. Price": chargebee_event["content"]["subscription"][
-                        "subscription_items"
-                    ][0]["amount"],
-                    "1. Product": product["Variant Name"],
-                    "1. Start Date": iso8601_date_from,
-                    "ClaimsGurus Customer ID": cust_id,
-                    "Engine Size": vehicle_data["Engine capacity *"],
-                    "Financed?": funded,
-                    "First Registered Date": vehicle_data[
-                        "First registered *"
-                    ],
-                    "Make/Model": vehicle_data["Make"]
-                                  + "/"
-                                  + vehicle_data["Model"],
-                    "Mileage": vehicle_data["Annual mileage"],
-                    "Vehicle - Price": vehicle_data["Vehicle price *"],
-                    "VRM": vehicle_info["Request"]["DataKeys"]["Vrm"],
-                }
-                # print("to send to close: ", close_io_data)
                 lead_response = send_data_to_closeio(data=close_io_data)
                 logger.info(
                     f"sending data to close, close response {lead_response}"
                 )
 
-                contact_data = {
-                    "lead_id": lead_response["id"],
-                    "name": customer_data["Full Name"],
-                    "title": "President",
-                    "country": chargebee_event["content"]["customer"][
-                        "billing_address"
-                    ]["country"],
-                    "phones": [
-                        {
-                            "phone": chargebee_event["content"]["customer"][
-                                "phone"
-                            ],
-                            "type": "mobile",
-                        }
-                    ],
-                    "emails": [
-                        {"email": customer_data["email"], "type": "office"}
-                    ],
-                    "urls": [
-                        {"url": "http://twitter.com/google/", "type": "url"}
-                    ],
-                    "custom.cf_j0P7kHmgFTZZnYBFtyPSZ3uQw4dpW8xKcW7Krps8atj": "Account Executive",
-                }
+                contact_data = map_contact_data(
+                    lead_response=lead_response,
+                    customer_data=customer_data,
+                    chargebee_event=chargebee_event,
+                )
 
                 contact_created = create_contact(data=contact_data)
                 logger.info(f"contact response: {contact_created}")
